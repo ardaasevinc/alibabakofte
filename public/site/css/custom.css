@@ -1,0 +1,27 @@
+/*!---------- Custom Styles Here ----------*/
+
+/* Slider içindeki resmin varsayılan hali: Siyah Beyaz */
+.image-slider .slides li img {
+    filter: grayscale(100%); /* Resmi tamamen renksiz yapar */
+    transition: filter 0.5s ease-in-out; /* Geçişin yumuşak olmasını sağlar */
+    -webkit-filter: grayscale(100%); /* Safari desteği */
+}
+
+/* Üzerine gelindiğinde (Hover): Renkli */
+.image-slider .slides li:hover img {
+    filter: grayscale(0%); /* Renkleri geri getirir */
+    -webkit-filter: grayscale(0%);
+}
+
+  /* Harita üzerine gelince renklenmesi için opsiyonel CSS */
+    .map-container:hover .google-map {
+        filter: grayscale(0%) !important;
+        -webkit-filter: grayscale(0%) !important;
+    }
+    
+    /* İletişim kartının mobilde haritayı tamamen kapatmaması için */
+    @media (max-width: 768px) {
+        .contact-details {
+            margin-top: 50px;
+        }
+    }
