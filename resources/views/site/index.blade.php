@@ -7,6 +7,7 @@
 {{-- @include('site.components.menu') --}}
 @include('site.components.special')
 @include('site.components.video')
-@include('site.components.padreco')
+@include('site.components.instagram')
 @include('site.components.contact')
+{{-- @include('site.components.whatsapp') --}}
 @endsection
