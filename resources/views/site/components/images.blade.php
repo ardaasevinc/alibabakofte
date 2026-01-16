@@ -59,7 +59,7 @@
     .gallery-card {
         flex: 0 0 auto;
         margin-right: 40px;
-        border-radius: 15px;
+        
         overflow: hidden;
         position: relative;
         box-shadow: 0 15px 45px rgba(0,0,0,0.15);

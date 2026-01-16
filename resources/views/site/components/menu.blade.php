@@ -121,6 +121,20 @@
                             </div>
                         </li>
                         <li>
+                            <div class="tab-title"><span>Sucuk</span></div>
+                            <div class="tab-content">
+                                <div class="col-sm-6 p0">
+                                    <div class="mb40 mb-xs-24 menu-item" data-img="{{ asset('site/img/body1.jpg') }}">
+                                        <span class="bold block">Porsiyon Dana Sucuk</span>
+                                        <p class="mb0">%100 dana etinden, çiftliğimizden doğal lezzet.</p>
+                                        <span class="block">450₺</span>
+                                    </div>
+                                   
+                                </div>
+                                
+                            </div>
+                        </li>
+                        <li>
                             <div class="tab-title"><span>Çorbalar</span></div>
                             <div class="tab-content">
                                 <div class="col-sm-6 p0">
@@ -159,13 +173,7 @@
                                         <span class="block">220₺</span>
                                     </div>
                                 </div>
-                                <div class="col-sm-6 p0">
-                                    <div class="mb40 mb-xs-24 menu-item" data-img="{{ asset('site/img/body1.jpg') }}">
-                                        <span class="bold block">Porsiyon Dana Sucuk</span>
-                                        <p class="mb0">%100 dana etinden, çiftliğimizden doğal lezzet.</p>
-                                        <span class="block">450₺</span>
-                                    </div>
-                                </div>
+                               
                             </div>
                         </li>
                         <li>
