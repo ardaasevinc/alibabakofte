@@ -17,9 +17,13 @@ Route::get('/menu', [MenuIndexController::class, 'index'])->name('site.menu.inde
 
 
 Route::get('/instagram/callback', function (Request $request) {
-    // Meta'nın gönderdiği verify_token ile sizin belirlediğiniz eşleşmeli
-    if ($request->input('hub_verify_token') === env('INSTAGRAM_VERIFY_TOKEN')) {
+    $verifyToken = config('services.instagram.verify_token');
+
+    if ($request->input('hub_mode') === 'subscribe' &&
+        $request->input('hub_verify_token') === $verifyToken) {
+        
         return response($request->input('hub_challenge'));
     }
-    return response('Token mismatch', 403);
+
+    return response('Doğrulama başarısız', 403);
 });
