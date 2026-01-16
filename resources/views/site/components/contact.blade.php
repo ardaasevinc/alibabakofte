@@ -24,9 +24,10 @@
                             <div class="pt80 pb56 bg-white p32 overflow-hidden shadow-lg"
                                 style="box-shadow: 0 15px 35px rgba(0,0,0,0.1); border-radius: 8px;">
                                 <div class="col-sm-10 col-sm-offset-1 text-center">
-                                    {{-- Çalışma Saatleri --}}
+                                    
                                     @if($settings->work_time)
                                         <div class="mb16">
+                                        Çalışma Saatleri: <br>
                                             {!! $settings->work_time !!}
                                         </div>
                                         <hr>
