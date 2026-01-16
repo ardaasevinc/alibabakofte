@@ -4,11 +4,24 @@ namespace App\Http\Controllers\Site\Blog;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Blog;;
+use App\Models\BlogCategory;
 
 class IndexController extends Controller
 {
     public function index()
     {
-        return view('site.blog.index');
+
+    $latestBlogs = Blog::with('category')
+            ->where('is_published', 1)
+            ->orderBy('created_at', 'desc')
+            ->take(6)
+            ->get();
+
+        $blogCategories = BlogCategory::where('is_published', 1)->get();
+        return view('site.blog.index', compact(
+            'latestBlogs',
+            'blogCategories'
+        ));
     }
 }

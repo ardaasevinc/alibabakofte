@@ -3,7 +3,7 @@
     <div class="container">
         <div class="row">
             
-            <div class="col-sm-6 mb-xs-24 text-center-xs">
+            <div class="col-sm-8 mb-xs-24 text-center-xs">
                 {{-- Logo Alanı --}}
                 @if($settings->logo_light)
                 <div class="inline-block center">
