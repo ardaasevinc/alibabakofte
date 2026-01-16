@@ -18,7 +18,7 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        //
-    }
+{
+    \Illuminate\Support\Facades\View::share('settings', \App\Models\Setting::first());
+}
 }
