@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -10,40 +9,46 @@ use Carbon\Carbon;
 
 class FetchInstagramPosts extends Command
 {
-    // Komutu terminalden çalıştırma adı
     protected $signature = 'instagram:fetch';
-    protected $description = 'Instagram API üzerinden gönderileri çeker ve tokenı yeniler';
+    protected $description = 'Instagram API üzerinden gönderileri çeker ve videoları orijinal formatıyla kaydeder';
 
-public function handle()
-{
-    // config'den token'ı alıyoruz (Artık çalıştığına eminiz)
-    $token = config('services.instagram.access_token');
+    public function handle()
+    {
+        $token = config('services.instagram.access_token');
 
-    $response = Http::get("https://graph.instagram.com/me/media", [
-        'fields' => 'id,caption,media_type,media_url,permalink,timestamp',
-        'access_token' => $token
-    ]);
+        // 1. Token Yenileme (Bağlantının kopmaması için 60 günlük süreyi tazeler)
+        Http::get("https://graph.instagram.com/refresh_access_token", [
+            'grant_type' => 'ig_refresh_token',
+            'access_token' => $token
+        ]);
 
-    if ($response->successful()) {
-        $data = $response->json('data');
-        
-        foreach ($data as $post) {
-            InstagramPost::updateOrCreate(
-                ['instagram_id' => $post['id']], // Eğer bu ID varsa güncelle, yoksa yeni oluştur
-                [
-                    'media_type'   => $post['media_type'],
-                    'media_url'    => $post['media_url'],
-                    'permalink'    => $post['permalink'],
-                    'caption'      => $post['caption'] ?? null,
-                    'posted_at'    => \Illuminate\Support\Carbon::parse($post['timestamp']),
-                    // 'is_published' default migration'da neyse o kalır (false yapmıştık)
-                ]
-            );
+        // 2. Medya Verilerini Çekme (thumbnail_url dahil)
+        $response = Http::get("https://graph.instagram.com/me/media", [
+            'fields' => 'id,caption,media_type,media_url,permalink,timestamp,thumbnail_url',
+            'access_token' => $token
+        ]);
+
+        if ($response->successful()) {
+            $data = $response->json('data');
+
+            foreach ($data as $post) {
+                // Videolar için media_url asıl video dosyasını (.mp4) verir.
+                // Blade tarafında <video> etiketi bunu oynatabilir.
+                InstagramPost::updateOrCreate(
+                    ['instagram_id' => $post['id']],
+                    [
+                        'media_type' => $post['media_type'],
+                        'media_url' => $post['media_url'],
+                        'permalink' => $post['permalink'],
+                        'caption' => $post['caption'] ?? null,
+                        'posted_at' => Carbon::parse($post['timestamp']),
+                    ]
+                );
+            }
+
+            $this->info(count($data) . " adet içerik (video ve resim) başarıyla senkronize edildi.");
+        } else {
+            $this->error("Hata: " . $response->body());
         }
-
-        $this->info(count($data) . " adet gönderi başarıyla işlendi.");
-    } else {
-        $this->error("Hata: " . $response->body());
     }
-}
 }

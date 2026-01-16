@@ -61,11 +61,11 @@
         <div class="row">
             <div class="col-sm-12 text-center">
                 <div class="inline-block">
-                    <h6 class="uppercase">Follow For More</h6>
+                    <h6 class="uppercase">DAHA FAZLASI İÇİN BİZİ TAKİP EDİN</h6>
                     <ul class="list-inline social-list">
                         <li>
                             <a href="#">
-                                <i class="ti-twitter-alt"></i>
+                                <span>Google'da yorum yap</span>
                             </a>
                         </li>
                         <li>
