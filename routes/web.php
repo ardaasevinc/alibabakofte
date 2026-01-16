@@ -15,15 +15,11 @@ Route::get('/menu', [MenuIndexController::class, 'index'])->name('site.menu.inde
 
 
 
-
-Route::get('/instagram/callback', function (Request $request) {
-    $verifyToken = config('services.instagram.verify_token');
-
-    if ($request->input('hub_mode') === 'subscribe' &&
-        $request->input('hub_verify_token') === $verifyToken) {
-        
-        return response($request->input('hub_challenge'));
+Route::get('/instagram/callback', function (Illuminate\Http\Request $request) {
+    // Meta'nın gönderdiği 'hub.challenge' değerini direkt döndürür
+    if ($request->has('hub_challenge')) {
+        return response($request->input('hub_challenge'), 200)
+                 ->header('Content-Type', 'text/plain');
     }
-
-    return response('Doğrulama başarısız', 403);
+    return response('Challenge bulunamadı', 400);
 });
