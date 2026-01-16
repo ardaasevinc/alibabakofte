@@ -16,12 +16,11 @@ Route::get('/menu', [MenuIndexController::class, 'index'])->name('site.menu.inde
 
 
 Route::get('/instagram/callback', function (Request $request) {
-    // Eğer Meta bir challenge kodu gönderdiyse, onu direkt ekrana yaz
+    // Eğer Meta bir doğrulama kodu gönderdiyse direkt döndür
     if ($request->has('hub_challenge')) {
         return response($request->input('hub_challenge'), 200)
-            ->header('Content-Type', 'text/plain');
+                 ->header('Content-Type', 'text/plain');
     }
 
-    
-    return "Meta'dan istek bekleniyor...";
+    return "Sistem Hazır. Meta'dan istek bekleniyor...";
 });
