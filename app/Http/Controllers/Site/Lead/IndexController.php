@@ -14,7 +14,7 @@ class IndexController extends Controller
     public function whatsapp()
     {
         // Sabit telefon numarası veya dinamik olarak ayarlanabilir
-        $phone = '905331959477'; 
+        $phone = '905352855696';
         return $this->processLead('meta-whatsapp', "https://wa.me/{$phone}");
     }
 
