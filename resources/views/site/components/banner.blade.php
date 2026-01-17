@@ -10,7 +10,7 @@
                                     <li class="v-align-transform">
                                         <img alt="{{ $item->title ?? 'Ali Baba Köfte' }}" 
                                              src="{{ asset('uploads/' . $item->image) }}" 
-                                             style="height: 600px; width: 100%; object-fit: cover;" />
+                                             style="height: 800px; object-fit: cover;" />
                                     </li>
                                 @endif
                             @endforeach
