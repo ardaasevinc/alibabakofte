@@ -1,35 +1,35 @@
-@if($banners && $banners->count() > 0)
-<section class="pb0 pt0">
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-12 text-center">
-                {{-- data-animation="fade" ile geçiş efektini belirliyoruz --}}
-                <div class="image-slider slider-arrow-controls mb0" data-animation="fade" data-speed="3000">
-                    <ul class="slides">
-                        @foreach($banners as $banner)
-                            <li>
-                                <img alt="{{ $banner->title ?? 'Ali Baba Köfte Banner' }}" 
-                                     src="{{ asset('uploads/' . $banner->image) }}" />
-                            </li>
-                        @endforeach
-                    </ul>
+@if($banner && $banner->count() > 0)
+    <section class="pb0 pt0">
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 text-center">
+                    {{-- data-animation="fade" yumuşak geçişi, data-speed ise süreyi belirler --}}
+                    <div class="image-slider slider-arrow-controls mb0" data-animation="fade" data-speed="5000">
+                        <ul class="slides">
+                            @foreach($banner as $item)
+                                <li class="v-align-transform">
+                                    <img alt="{{ $item->title ?? 'Ali Baba Köfte' }}"
+                                        src="{{ asset('uploads/' . $item->image) }}" />
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 @endif
 
-{{-- Eğer temanın flexslider'ı otomatik tetiklemiyorsa bu küçük script'i ekleyebilirsin --}}
+{{-- Temadaki slider'ın fade (solma) modunda çalışması için manuel tetikleme --}}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
         if (typeof $.flexslider === "function") {
             $('.image-slider').flexslider({
-                animation: "fade", // Kayma yerine solma efekti
-                slideshowSpeed: 5000, // 5 saniyede bir değişsin
-                animationSpeed: 1000, // Geçiş süresi 1 saniye
-                controlNav: false, // Alt noktaları gizle (isteğe bağlı)
-                directionNav: true // Yan okları göster
+                animation: "fade",      // Kayma yerine solma efekti
+                slideshowSpeed: 5000,   // Görselin ekranda kalma süresi (5 sn)
+                animationSpeed: 1000,   // Geçiş sırasındaki solma hızı (1 sn)
+                controlNav: false,      // Alt noktaları gizle
+                directionNav: true      // Sağ-sol oklarını göster
             });
         }
     });
