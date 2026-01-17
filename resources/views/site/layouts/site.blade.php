@@ -101,6 +101,16 @@
     <script src="{{ asset('site/js/smooth-scroll.min.js') }}"></script>
     <script src="{{ asset('site/js/parallax.min.js') }}"></script>
     <script src="{{ asset('site/js/scripts.js') }}"></script>
+
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then(reg => console.log('Service Worker Kayıt Başarılı!'))
+        .catch(err => console.log('Hata:', err));
+    });
+  }
+</script>
 </body>
 
 </html>
