@@ -20,11 +20,7 @@
                 @endif
                 <div class="row">
                     <div class="col-md-7 col-md-offset-3 col-sm-8 col-sm-offset-2">
-                        @if($special->title)
-                            <h2 class="alt-font">
-                                {!! nl2br(e($special->title)) !!}
-                            </h2>
-                        @endif
+                        
 
                         @if($special->desc)
                             <div class="mb0">
