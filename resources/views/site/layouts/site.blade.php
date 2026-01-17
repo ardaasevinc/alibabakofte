@@ -53,6 +53,8 @@
     {{-- UTM Takibi İçerik Kontrolü --}}
     @if(request()->has('utm_content'))
         @endif
+
+        
 </head>
 
 <body>

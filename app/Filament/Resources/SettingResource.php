@@ -109,6 +109,44 @@ Forms\Components\Tabs\Tab::make('SEO & Sosyal Medya')
                         ->columnSpanFull()
                         ->placeholder('https://g.page/r/your-id/review'),
                 ]),
+                // 4. SEKME: ANALİZ VE TAKİP (Bunu mevcut sekmelerin altına ekle)
+Forms\Components\Tabs\Tab::make('Analiz & Takip')
+    ->icon('heroicon-o-presentation-chart-line')
+    ->schema([
+        Forms\Components\Grid::make(12)->schema([
+            // FACEBOOK PIXEL & CAPI
+            Forms\Components\Section::make('Meta (Facebook) Ayarları')
+                ->description('Pixel ve Dönüşümler API (CAPI) entegrasyonu.')
+                ->columnSpan(6)
+                ->schema([
+                    Forms\Components\TextInput::make('facebook_pixel_id')
+                        ->label('Facebook Pixel ID')
+                        ->placeholder('3374032392748596')
+                        ->helperText('Meta Business Suite\'den aldığınız 15 haneli ID.'),
+                    
+                    Forms\Components\Textarea::make('facebook_access_token')
+                        ->label('Facebook CAPI Access Token')
+                        ->placeholder('EAAb...')
+                        ->rows(4)
+                        ->helperText('Dönüşümler API\'si için "Erişim Jetonu". Sitenin yavaşlamasını önlemek için gereklidir.'),
+                ]),
+
+            // GOOGLE ANALYTICS
+            Forms\Components\Section::make('Google Ayarları')
+                ->description('Analytics ve Tag Manager ölçümleri.')
+                ->columnSpan(6)
+                ->schema([
+                    Forms\Components\TextInput::make('google_analytics_id')
+                        ->label('Google Analytics ID (G-...)')
+                        ->placeholder('G-XXXXXXXXXX')
+                        ->helperText('Google Analytics 4 mülk kimliği.'),
+                    
+                    Forms\Components\TextInput::make('google_tag_manager_id')
+                        ->label('Google Tag Manager ID')
+                        ->placeholder('GTM-XXXXXXX'),
+                ]),
+        ]),
+    ]),
         ]),
     ]),
 
