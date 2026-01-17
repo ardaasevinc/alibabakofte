@@ -9,5 +9,5 @@
 @include('site.components.video')
 @include('site.components.instagram')
 @include('site.components.contact')
-@include('site.components.whatsapp')
+
 @endsection

@@ -38,6 +38,7 @@
     @include('site.components.header')
     <div class="main-container">
         @yield('content')
+        @include('site.components.whatsapp')
         @include('site.components.footer')
     </div>
 
