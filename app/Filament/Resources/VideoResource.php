@@ -14,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Tabs;
 
 class VideoResource extends Resource
@@ -28,58 +29,79 @@ class VideoResource extends Resource
     {
         return $form
             ->schema([
-                Section::make('Genel Bilgiler')
+                Grid::make(12) // Toplam 12 kolonluk bir grid başlatıyoruz
                     ->schema([
-                        TextInput::make('title')
-                            ->label('Başlık')
-                            ->maxLength(255),
-                        RichEditor::make('desc')
-                            ->label('Açıklama')
-                            ->toolbarButtons(['bold', 'italic', 'link']),
-                    ]),
 
-                Section::make('Video Kaynağı')
-                    ->description('Videonuzu ister bir link olarak paylaşın, isterseniz doğrudan sunucuya yükleyin.')
-                    ->schema([
-                        Tabs::make('Video Type')
-                            ->tabs([
-                                Tabs\Tab::make('Video Linki (YouTube/Vimeo)')
+                        // SOL TARAF (4 KOLON): Medya ve Durum Yönetimi
+                        Grid::make(1)
+                            ->schema([
+                                Section::make('Medya Yönetimi')
                                     ->schema([
-                                        TextInput::make('link')
-                                            ->label('URL')
-                                            ->placeholder('https://www.youtube.com/watch?v=...')
-                                            ->url(),
-                                    ]),
-                                Tabs\Tab::make('Video Dosyası Yükle')
-                                    ->schema([
-                                        FileUpload::make('video_file')
-                                            ->label('MP4 Dosyası')
+                                        FileUpload::make('image')
+                                            ->label('Kapak Fotoğrafı (Poster)')
                                             ->directory('videos')
-                                            ->disk('uploads') // Belirttiğin disk yapısı
-                                            ->acceptedFileTypes(['video/mp4', 'video/quicktime'])
-                                            ->maxSize(51200) // 50MB sınır
-                                            ->hint('Doğrudan oynatılacak mp4 dosyasını yükleyin.'),
+                                            ->disk('uploads')
+                                            ->image()
+                                            ->helperText('Video başlamadan önce veya link modunda görünen görsel.'),
+
+                                        Tabs::make('Video Kaynağı')
+                                            ->tabs([
+                                                Tabs\Tab::make('Dosya Yükle')
+                                                    ->schema([
+                                                        FileUpload::make('video_file')
+                                                            ->label('MP4 Dosyası')
+                                                            ->directory('videos')
+                                                            ->disk('uploads')
+                                                            ->acceptedFileTypes(['video/mp4'])
+                                                            ->maxSize(51200),
+                                                    ]),
+                                                Tabs\Tab::make('Video Linki')
+                                                    ->schema([
+                                                        TextInput::make('link')
+                                                            ->label('YouTube/Vimeo URL')
+                                                            ->url(),
+                                                    ]),
+                                            ]),
                                     ]),
-                            ]),
+
+                                Section::make('Yayın Seçenekleri')
+                                    ->schema([
+                                        Toggle::make('is_published')
+                                            ->label('Yayında')
+                                            ->default(true),
+                                        TextInput::make('order')
+                                            ->label('Sıralama')
+                                            ->numeric()
+                                            ->default(0),
+                                    ]),
+                            ])
+                            ->columnSpan(4), // Sol tarafa 4 kolon ayırdık
+
+                        // SAĞ TARAF (8 KOLON): Başlık ve İçerik
+                        Grid::make(1)
+                            ->schema([
+                                Section::make('İçerik Detayları')
+                                    ->schema([
+                                        TextInput::make('title')
+                                            ->label('Video Başlığı')
+                                            ->required()
+                                            ->maxLength(255),
+
+                                        RichEditor::make('desc')
+                                            ->label('Video Açıklaması')
+                                            ->hint('Videonun sağ tarafında görünecek metin.')
+                                            ->toolbarButtons([
+                                                'bold',
+                                                'italic',
+                                                'link',
+                                                'bulletList',
+                                                'orderedList'
+                                            ])
+                                            ->rows(10),
+                                    ]),
+                            ])
+                            ->columnSpan(8), // Sağ tarafa 8 kolon ayırdık
                     ]),
-
-                Section::make('Görsel ve Durum')
-                    ->schema([
-                        FileUpload::make('image')
-                            ->label('Kapak Fotoğrafı (Poster)')
-                            ->directory('videos')
-                            ->disk('uploads')
-                            ->image(),
-
-                        Toggle::make('is_published')
-                            ->label('Yayında mı?')
-                            ->default(true),
-
-                        TextInput::make('order')
-                            ->label('Sıralama')
-                            ->numeric()
-                            ->default(0),
-                    ])->columns(2),
             ]);
     }
 
@@ -88,16 +110,19 @@ class VideoResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('image')
-                    ->label('Kapak')
+                    ->label('Görsel')
                     ->disk('uploads'),
                 Tables\Columns\TextColumn::make('title')
-                    ->label('Başlık'),
-                Tables\Columns\TextColumn::make('link')
-                    ->label('Kaynak')
-                    ->formatStateUsing(fn($state, $record) => $state ? '🔗 Link' : ($record->video_file ? '📁 Dosya' : '-')),
-                Tables\Columns\ToggleColumn::make('is_published')
-                    ->label('Durum'),
+                    ->label('Başlık')
+                    ->searchable(),
+                Tables\Columns\IconColumn::make('is_published')
+                    ->label('Durum')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('order')
+                    ->label('Sıra')
+                    ->sortable(),
             ])
+            ->filters([])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
