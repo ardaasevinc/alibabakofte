@@ -19,7 +19,7 @@ class IndexController extends Controller
     {
         // Singleton Modeller (Tek kayıt)
         $about = About::where('is_published', 1)->first();
-        $banner = Banner::where('is_published', 1)->first();
+        $banner = Banner::where('is_published', 1)->get();
 
         // Orderable (Sıralı) Modeller
         $galleries = Gallery::where('is_published', 1)->orderBy('order', 'asc')->get();
