@@ -54,23 +54,42 @@
                         </ul>
                     </div>
 
-                   <div class="legal-links">
-        <ul class="list-unstyled">
-            <li class="mb8">
-                <a href="{{ route('site.permission.kvkk') }}" class="fade-half hover-white" style="font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">
-                    KVKK Aydınlatma Metni
-                </a>
-            </li>
-            <li>
-                <a href="{{ route('site.permission.acikriza') }}" class="fade-half hover-white" style="font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">
-                    Açık Rıza Beyanı
-                </a>
-            </li>
-        </ul>
-    </div>
+                    <div class="legal-links">
+                        <ul class="list-inline mb0">
+                            <li class="mb8">
+                                <a style="color:white !important; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;"
+                                    href="{{ route('site.permission.kvkk') }}" class="fade-half hover-white">
+                                    KVKK Aydınlatma Metni
+                                </a>
+                                </li>
+                            <li style="color: rgba(255,255,255,0.3);">|</li> {{-- Aradaki ayraç --}}
+                            <li>
+                                <a style="color:white !important; font-size: 11px; letter-spacing: 1px; text-transform: uppercase;"
+                                    href="{{ route('site.permission.acikriza') }}" class="fade-half hover-white">
+                                    Açık Rıza Beyanı
+                                </a>
+                                </li>
+                                </ul>
+                                </div>
+
+                    <style>
+                        .legal-links .list-inline li {
+                            display: inline-block;
+                            padding: 0 5px;
+                        }
+
+                        .legal-links .fade-half {
+                            opacity: 0.6;
+                            transition: opacity 0.3s ease;
+                        }
+
+                        .legal-links .fade-half:hover {
+                            opacity: 1;
+                        }
+                    </style>
 
                 </div>
-                </div>
-                </div>
-                </footer>
+            </div>
+            </div>
+            </footer>
 @endif
