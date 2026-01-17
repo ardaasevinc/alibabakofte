@@ -96,8 +96,8 @@ class VideoResource extends Resource
                                                 'link',
                                                 'bulletList',
                                                 'orderedList'
-                                            ])
-                                            ->rows(10),
+                                            ]),
+                                            
                                     ]),
                             ])
                             ->columnSpan(8), // Sağ tarafa 8 kolon ayırdık
