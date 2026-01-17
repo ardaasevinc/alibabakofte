@@ -67,26 +67,50 @@ class SettingResource extends Resource
                             ]),
 
                         // 2. SEKME: SEO VE SOSYAL MEDYA
-                        Forms\Components\Tabs\Tab::make('SEO & Sosyal Medya')
-                            ->schema([
-                                Forms\Components\Grid::make(12)->schema([
-                                    Forms\Components\Section::make('SEO Ayarları')
-                                        ->columnSpan(4)
-                                        ->schema([
-                                            Forms\Components\TextInput::make('meta_title')->label('Meta Başlık'),
-                                            Forms\Components\Textarea::make('meta_desc')->label('Meta Açıklama'),
-                                            Forms\Components\TextInput::make('meta_keywords')->label('Anahtar Kelimeler'),
-                                        ]),
-                                    Forms\Components\Section::make('Sosyal Medya & Harita')
-                                        ->columnSpan(8)
-                                        ->schema([
-                                            Forms\Components\TextInput::make('facebook_url')->url()->label('Facebook'),
-                                            Forms\Components\TextInput::make('instagram_url')->url()->label('Instagram'),
-                                            Forms\Components\TextInput::make('map_link')->label('Google Harita Linki'),
-                                            Forms\Components\Textarea::make('map_iframe')->label('Harita Iframe Kodu')->rows(3),
-                                        ]),
-                                ]),
-                            ]),
+                       // SettingResource.php içindeki ilgili sekme bölümü
+
+// 2. SEKME: SEO VE SOSYAL MEDYA
+Forms\Components\Tabs\Tab::make('SEO & Sosyal Medya')
+    ->schema([
+        Forms\Components\Grid::make(12)->schema([
+            Forms\Components\Section::make('SEO Ayarları')
+                ->columnSpan(4)
+                ->schema([
+                    Forms\Components\TextInput::make('meta_title')->label('Meta Başlık'),
+                    Forms\Components\Textarea::make('meta_desc')->label('Meta Açıklama'),
+                    Forms\Components\TextInput::make('meta_keywords')->label('Anahtar Kelimeler'),
+                ]),
+            Forms\Components\Section::make('Sosyal Medya & Harita')
+                ->columnSpan(8)
+                ->schema([
+                    Forms\Components\Grid::make(2)->schema([
+                        Forms\Components\TextInput::make('facebook_url')->url()->label('Facebook'),
+                        Forms\Components\TextInput::make('instagram_url')->url()->label('Instagram'),
+                    ]),
+                    
+                    Forms\Components\Grid::make(2)->schema([
+                        Forms\Components\TextInput::make('map_link')
+                            ->label('Google Harita Linki')
+                            ->placeholder('Yol tarifi linki...'),
+                        Forms\Components\TextInput::make('gpage_link')
+                            ->label('Google İşletme Profili')
+                            ->placeholder('İşletme sayfası ana linki...'),
+                    ]),
+
+                    Forms\Components\Textarea::make('map_iframe')
+                        ->label('Harita Iframe Kodu')
+                        ->placeholder('<iframe src="..."></iframe>')
+                        ->rows(3),
+
+                    // YENİ EKLENEN ALAN
+                    Forms\Components\TextInput::make('gpage_comment')
+                        ->label('Google Yorum Yap Linki')
+                        ->helperText('Müşterilerin doğrudan yorum yazma ekranına gitmesini sağlayan link.')
+                        ->columnSpanFull()
+                        ->placeholder('https://g.page/r/your-id/review'),
+                ]),
+        ]),
+    ]),
 
                         // 3. SEKME: SİSTEM VE ENV (HASSAS AYARLAR)
                        Forms\Components\Tabs\Tab::make('Sistem (ENV)')
