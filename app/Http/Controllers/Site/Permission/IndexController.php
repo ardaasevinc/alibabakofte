@@ -12,7 +12,7 @@ class IndexController extends Controller
         return view('site.permission.kvkk');
     }
     
-    public function cookies()
+    public function acikriza()
     {
         return view('site.permission.acikriza');
     }
