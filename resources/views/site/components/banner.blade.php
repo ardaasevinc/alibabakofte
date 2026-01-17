@@ -9,7 +9,7 @@
                             @foreach($banner as $item)
                                 <li class="v-align-transform">
                                     <img alt="{{ $item->title ?? 'Ali Baba Köfte' }}"
-                                        src="{{ asset('uploads/' . $item->image) }}" />
+                                        src="{{ asset('uploads/' . $item?->image) }}" />
                                 </li>
                             @endforeach
                         </ul>
