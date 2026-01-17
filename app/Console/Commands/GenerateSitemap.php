@@ -16,21 +16,24 @@ class GenerateSitemap extends Command
 
 public function handle()
 {
+    // Sitemap nesnesini oluştur
     $sitemap = \Spatie\Sitemap\Sitemap::create();
 
-    // Ana Sayfalar
-    $sitemap->add(\Spatie\Sitemap\Tags\Url::create('/')->setPriority(1.0))
-            ->add(\Spatie\Sitemap\Tags\Url::create('/blog')->setPriority(0.8))
-            ->add(\Spatie\Sitemap\Tags\Url::create('/menu')->setPriority(0.8));
+    // 1. Ana sayfaları ekle
+    $sitemap->add('/')
+            ->add('/blog')
+            ->add('/menu');
+            
 
-    // Dinamik Blog Yazılarını Ekle (Başlık değil, URL olarak)
-    \App\Models\Blog::all()->each(function (\App\Models\Blog $blog) use ($sitemap) {
-        $sitemap->add(\Spatie\Sitemap\Tags\Url::create("/blog/{$blog->slug}")
-            ->setLastModificationDate($blog->updated_at)
-            ->setChangeFrequency(\Spatie\Sitemap\Tags\Url::CHANGE_FREQUENCY_WEEKLY)
-            ->setPriority(0.6));
+    // 2. Dinamik Blog Yazılarını Veritabanından Çek ve Ekle
+    // Not: Model adın 'Blog' veya 'Post' ise ona göre güncelle
+    \App\Models\Blog::where('is_published', true)->get()->each(function ($post) use ($sitemap) {
+        $sitemap->add("/blog/{$post->slug}");
     });
 
+    // Dosyayı kaydet
     $sitemap->writeToFile(public_path('sitemap.xml'));
+
+    $this->info('Sitemap blog yazılarıyla birlikte güncellendi.');
 }
 }
