@@ -4,20 +4,24 @@
 <head>
     <meta charset="utf-8">
     {{-- SEO Başlık --}}
-    <title>{{ $settings?->meta_title ?? 'Meşhur Çatalcalı Ali Baba Köfte Salonu | 1997\'den Beri Gelen Lezzet' }}</title>
-    
+    <title>{{ $settings?->meta_title ?? 'Meşhur Çatalcalı Ali Baba Köfte Salonu | 1997\'den Beri Gelen Lezzet' }}
+    </title>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {{-- SEO Meta Etiketleri --}}
-    <meta name="description" content="{{ $settings?->meta_desc ?? 'Çatalca\'nın meşhur tarihi köftecisi Ali Baba Köfte Salonu. 1997\'den beri Çatalca merkezde değişmeyen reçetesiyle hizmet veren Ali Baba.' }}">
-    <meta name="keywords" content="{{ $settings->meta_keywords ?? 'çatalca köfte, meşhur çatalca köftecisi, ali baba köfte çatalca, alibaba köfte' }}">
+    <meta name="description"
+        content="{{ $settings?->meta_desc ?? 'Çatalca\'nın meşhur tarihi köftecisi Ali Baba Köfte Salonu. 1997\'den beri Çatalca merkezde değişmeyen reçetesiyle hizmet veren Ali Baba.' }}">
+    <meta name="keywords"
+        content="{{ $settings->meta_keywords ?? 'çatalca köfte, meşhur çatalca köftecisi, ali baba köfte çatalca, alibaba köfte' }}">
     <meta name="author" content="Ali Baba Köfte Salonu">
     <meta name="robots" content="index, follow">
 
     {{-- Open Graph (Sosyal Medya Paylaşım) --}}
     <meta property="og:title" content="{{ $settings?->meta_title }}">
     <meta property="og:description" content="{{ $settings?->meta_desc }}">
-    <meta property="og:image" content="{{ $settings?->logo_dark ? asset('uploads/' . $settings?->logo_dark) : asset('site/alibaba/logos/logo-white.svg') }}">
+    <meta property="og:image"
+        content="{{ $settings?->logo_dark ? asset('uploads/' . $settings?->logo_dark) : asset('site/alibaba/logos/logo-white.svg') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
 
@@ -38,34 +42,38 @@
     @endif
 
     {{-- Fontlar --}}
-    <link href='https://fonts.googleapis.com/css?family=Montserrat%7CInconsolata:400,700%7CPathway+Gothic+One' rel='stylesheet' type='text/css'>
+    <link href='https://fonts.googleapis.com/css?family=Montserrat%7CInconsolata:400,700%7CPathway+Gothic+One'
+        rel='stylesheet' type='text/css'>
 
-<script>
-  !function(f,b,e,v,n,t,s)
-  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-  n.queue=[];t=b.createElement(e);t.async=!0;
-  t.src=v;s=b.getElementsByTagName(e)[0];
-  s.parentNode.insertBefore(t,s)}(window, document,'script',
-  'https://connect.facebook.net/en_US/fbevents.js');
-  
-  fbq('init', '{{ $settings->facebook_pixel_code }}'); // DB'den sadece ID'yi aldık
-  fbq('track', 'PageView');
-</script>
-<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', '{{ $settings->google_analytics_code }}');
-</script>
+    <script>
+        !function (f, b, e, v, n, t, s) {
+            if (f.fbq) return; n = f.fbq = function () {
+                n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+            };
+            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+            n.queue = []; t = b.createElement(e); t.async = !0;
+            t.src = v; s = b.getElementsByTagName(e)[0];
+            s.parentNode.insertBefore(t, s)
+        }(window, document, 'script',
+            'https://connect.facebook.net/en_US/fbevents.js');
+
+        fbq('init', '{{ $settings->facebook_pixel_code }}');
+        fbq('track', 'PageView');
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', '{{ $settings->google_analytics_code }}');
+    </script>
 
     {{-- UTM Takibi İçerik Kontrolü --}}
     @if(request()->has('utm_content'))
-        @endif
+    @endif
 
-        
+
 </head>
 
 <body>

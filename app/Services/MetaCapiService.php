@@ -8,17 +8,13 @@ use Illuminate\Support\Facades\Log;
 
 class MetaCapiService
 {
-    // 4. Parametre olarak test kodunu ekledik
     public static function sendEvent(string $eventName, array $userData, string $eventId, string $testEventCode = null)
     {
-        // Verileri artık config (.env) üzerinden çekiyoruz
-        $pixelId = config('services.meta.pixel_id') ?? Setting::first()?->facebook_pixel_code;
-        $accessToken = config('services.meta.access_token') ?? Setting::first()?->facebook_access_token;
+        $settings = Setting::first();
+        $pixelId = $settings->facebook_pixel_code; 
+        $accessToken = $settings->facebook_access_token;
 
-        if (!$pixelId || !$accessToken) {
-            Log::warning("CAPI Hatası: Pixel ID veya Access Token eksik.");
-            return;
-        }
+        if (!$pixelId || !$accessToken) return;
 
         $url = "https://graph.facebook.com/v18.0/{$pixelId}/events";
 
@@ -26,7 +22,7 @@ class MetaCapiService
             'data' => [[
                 'event_name' => $eventName,
                 'event_time' => time(),
-                'event_id'   => $eventId,
+                'event_id'   => $eventId, // Tarayıcı ile eşleşme için kritik
                 'action_source' => 'website',
                 'event_source_url' => $userData['event_source_url'] ?? request()->url(),
                 'user_data' => array_filter([
@@ -40,16 +36,15 @@ class MetaCapiService
             'access_token' => $accessToken,
         ];
 
-        // Eğer test kodu varsa gönderiye ekliyoruz
         if ($testEventCode) {
             $data['test_event_code'] = $testEventCode;
         }
 
         try {
-            $response = Http::post($url, $data);
-            if ($response->failed()) Log::warning("CAPI Yanıt Hatası: " . $response->body());
+            // timeout(5) ekledik ki Meta yavaşsa site kilitlenmesin
+            Http::timeout(5)->post($url, $data);
         } catch (\Exception $e) {
-            Log::error("CAPI Bağlantı Hatası: " . $e->getMessage());
+            Log::error("CAPI Hatası: " . $e->getMessage());
         }
     }
 }

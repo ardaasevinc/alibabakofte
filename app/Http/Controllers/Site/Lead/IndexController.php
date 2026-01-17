@@ -13,42 +13,52 @@ class IndexController extends Controller
 {
     public function whatsapp()
     {
+        // Sabit telefon numarası veya dinamik olarak ayarlanabilir
         $phone = '905331959477'; 
         return $this->processLead('meta-whatsapp', "https://wa.me/{$phone}");
     }
 
     public function menu()
     {
+        // Menü rotasına yönlendirme
         return $this->processLead('meta-menu', route('site.menu.index'));
     }
 
     private function processLead($buttonId, $targetUrl)
     {
-        // 1. GÜVENLİK: Bot ve Prefetch engelleme
-        if (request()->header('X-Purpose') == 'preview' || request()->header('X-Moz') == 'prefetch' || request()->header('Purpose') == 'prefetch') {
+        // 1. GÜVENLİK: Bot ve Prefetch (Ön yükleme) engelleme
+        if (
+            request()->header('X-Purpose') == 'preview' ||
+            request()->header('X-Moz') == 'prefetch' ||
+            request()->header('Purpose') == 'prefetch'
+        ) {
             return redirect()->to($targetUrl);
         }
 
         $previousUrl = url()->previous();
         $currentUrl = url()->current();
 
-        // 2. GÜVENLİK: Sayfa yenileme koruması
+        // 2. GÜVENLİK: Sayfa yenileme veya boş yönlendirme koruması
         if ($previousUrl === $currentUrl || empty($previousUrl)) {
             return redirect()->to($targetUrl);
         }
 
-        // 3. GÜVENLİK: Mükerrer Tıklama Kilidi (10 saniye)
+        // 3. GÜVENLİK: Mükerrer Tıklama Kilidi (Aynı IP ve buton için 10 saniye)
         $lockKey = 'lead_lock_' . md5(request()->ip() . $buttonId);
         if (Cache::has($lockKey)) {
             return redirect()->to($targetUrl);
         }
         Cache::put($lockKey, true, 10);
 
+        // Olay Eşleştirme (Deduplication) için benzersiz ID oluşturma
+        // Bu ID hem CAPI'ye hem (isteğe bağlı) tarayıcıya giderse Meta olayları birleştirir.
         $eventId = 'ab_' . uniqid() . '_' . time();
+
+        // URL parametrelerini ayıkla (UTM takibi için)
         parse_str(parse_url($previousUrl, PHP_URL_QUERY) ?? '', $urlQueries);
 
         try {
-            // VERİTABANI KAYDI
+            // VERİTABANI KAYDI: Önce kaydı yapıyoruz ki ID oluşsun.
             $lead = Lead::create([
                 'type' => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu',
                 'event_id' => $eventId,
@@ -65,18 +75,25 @@ class IndexController extends Controller
             ]);
 
             // META CAPI GÖNDERİMİ
-            // 4. Parametre: Test Kodun (TEST24572). Canlıya alırken bunu null yapabilirsin.
-            MetaCapiService::sendEvent('Lead', [
-                'external_id' => hash('sha256', (string) $lead->id),
-                'fbc' => $lead->fbclid ? "fb.1." . time() . "." . $lead->fbclid : null,
-                'event_source_url' => $previousUrl,
-            ], $eventId, 'TEST24572');
+            // Parametreler: 1.Olay Adı, 2.Kullanıcı Verileri, 3.Olay ID, 4.Test Kodu
+            // NOT: Test bittikten sonra 'TEST24572' yerine null yazmayı unutmayın.
+            MetaCapiService::sendEvent(
+                'Lead',
+                [
+                    'external_id' => hash('sha256', (string) $lead->id),
+                    'fbc' => $lead->fbclid ? "fb.1." . time() . "." . $lead->fbclid : null,
+                    'event_source_url' => $previousUrl,
+                ],
+                $eventId,
+                'TEST24572' // Sizin Meta panelindeki test kodunuz
+            );
 
         } catch (\Exception $e) {
+            // Hata olursa logla ama kullanıcıyı bekletme
             Log::error("Ali Baba Lead Hatası: " . $e->getMessage());
         }
 
-        // 4. HIZLI YÖNLENDİRME
+        // 4. SONUÇ: Kullanıcıyı hedef URL'ye (WhatsApp veya Menü) uçur.
         return redirect()->to($targetUrl);
     }
 }
