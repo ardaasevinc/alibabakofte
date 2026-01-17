@@ -41,12 +41,12 @@
     <link href='https://fonts.googleapis.com/css?family=Montserrat%7CInconsolata:400,700%7CPathway+Gothic+One' rel='stylesheet' type='text/css'>
 
     {{-- Google Analytics Code --}}
-    @if($settings->google_analytics_code)
-        {!! $settings->google_analytics_code !!}
+    @if($settings?->google_analytics_code)
+        {!! $settings?->google_analytics_code !!}
     @endif
 
     {{-- Facebook Pixel Code --}}
-    @if($settings->facebook_pixel_code)
+    @if($settings?->facebook_pixel_code)
         {!! $settings->facebook_pixel_code !!}
     @endif
 
