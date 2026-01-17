@@ -13,7 +13,7 @@
                     6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) uyarınca aşağıda açıklanan kapsamda işlenmektedir.
                 </p>
 
-                <h4 class="uppercase">A. İşlenen Kişisel Verileriniz ve İşleme Amaçları</h4>
+                <h2 class="uppercase">A. İşlenen Kişisel Verileriniz ve İşleme Amaçları</h2>
                 <p>
                     Web sitemizde herhangi bir iletişim veya kayıt formu bulunmamaktadır. Ancak, sitenin işleyişi ve analizi kapsamında şu veriler işlenmektedir:
                 </p>
@@ -29,14 +29,14 @@
                     <strong>İşleme Amaçları:</strong> Sitemizin performansını ölçmek, reklam kampanyalarımızın (Meta/Google) verimliliğini analiz etmek ve ziyaretçi deneyimini iyileştirmektir.
                 </p>
 
-                <h4 class="uppercase">B. Kişisel Verilerin Aktarılması ve Sunucu Lokasyonu</h4>
+                <h2 class="uppercase">B. Kişisel Verilerin Aktarılması ve Sunucu Lokasyonu</h2>
                 <p>
                     Web sitemiz <strong>Hetzner Online GmbH</strong> bünyesinde, Avrupa Birliği (Almanya/Finlandiya) lokasyonlu sunucularda barındırılmaktadır. 
                     Bu kapsamda, siteyi ziyaret etmenizle oluşan trafik verileri teknik altyapı gereği <strong>yurt dışına aktarılmaktadır.</strong> <br><br>
                     Ayrıca, <strong>Google Analytics</strong> ve <strong>Meta Pixel</strong> kullanımı nedeniyle analiz verileriniz ilgili servis sağlayıcıların yurt dışı sunucularına aktarılmaktadır.
                 </p>
 
-                <h4 class="uppercase">C. Veri Toplama Yöntemi ve Hukuki Sebepler</h4>
+                <h2 class="uppercase">C. Veri Toplama Yöntemi ve Hukuki Sebepler</h4>
                 <p>
                     Verileriniz, çerezler (cookies) ve takip pikselleri aracılığıyla otomatik yöntemlerle toplanmaktadır.
                 </p>
