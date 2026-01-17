@@ -3,7 +3,8 @@
         {{-- Sol Taraf: Adres (Sadece Şehir/Semt Kısmı veya Kısa Adres) --}}
         <div class="col-sm-4 text-center-xs">
             <span class="sub">
-                <a style="color:white !important;" href="{{ $settings?->map_link }}">{{ $settings?->address ? Str::limit($settings->address, 30) : 'Çatalca, İstanbul' }}</a>
+                <a style="color:white !important;"
+                    href="{{ $settings?->map_link }}">{{ $settings?->address ? Str::limit($settings->address, 30) : 'Çatalca, İstanbul' }}</a>
             </span>
         </div>
 
@@ -42,8 +43,10 @@
         {{-- Sağ Taraf: Çalışma Saatleri --}}
         <div class="col-sm-4 text-right text-center-xs">
             <span class="sub">
-                Çalışma Saatleri: {!! $settings?->work_time ? strip_tags($settings->work_time) : '05:30 - 20:00' !!}
+                <a href="tel:02127895255" style="color: white !important; text-decoration: none; ">
+                    Hemen Arayın: 0212 789 52 55
+                </a>
             </span>
         </div>
     </div>
-    </div>
+</div>
