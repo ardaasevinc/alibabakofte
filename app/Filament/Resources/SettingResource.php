@@ -69,13 +69,27 @@ class SettingResource extends Resource
                                 ]),
                             ]),
 
-                        // 3. SEKME: ANALİZ (İSTEDİĞİN RİCH EDİTOR ALANLARI)
-                     Forms\Components\Tabs\Tab::make('Analiz & Takip')
+  Forms\Components\Tabs\Tab::make('Analiz & Takip')
+    ->icon('heroicon-o-presentation-chart-line')
     ->schema([
-        Forms\Components\RichEditor::make('facebook_pixel_code')
-            ->label('Facebook Pixel Kodu'),
-        Forms\Components\RichEditor::make('google_analytics_code')
-            ->label('Google Analytics Kodu'),
+        Forms\Components\Grid::make(2)->schema([
+            Forms\Components\Section::make('Meta (Facebook) Pixel')
+                ->description('Buraya <script> ile başlayan tüm kodu yapıştırın.')
+                ->schema([
+                    Forms\Components\Textarea::make('facebook_pixel_code')
+                        ->label('Pixel Kodu')
+                        ->rows(15) // Kutu boyunu uzattık
+                        ->placeholder('...'),
+                ]),
+            Forms\Components\Section::make('Google Analytics')
+                ->description('Buraya G- ile başlayan Google etiket kodunu yapıştırın.')
+                ->schema([
+                    Forms\Components\Textarea::make('google_analytics_code')
+                        ->label('Analytics Kodu')
+                        ->rows(15) // Kutu boyunu uzattık
+                        ->placeholder('...'),
+                ]),
+        ]),
     ]),
 
                         // 4. SEKME: SİSTEM
