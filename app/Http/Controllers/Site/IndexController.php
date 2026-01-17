@@ -1,55 +1,45 @@
-<?php
+@if($specials && $specials->count() > 0)
+<a id="special"></a>
+@foreach($specials as $special)
+<section class="pb0">
+    <div class="container">
+        <div class="row mb64 mb-xs-40">
+            <div class="col-sm-12 text-center">
+                <div class="ribbon">
+                    {{-- Başlık varsa göster, yoksa varsayılan metni bas --}}
+                    <h6 class="uppercase mb0">{{ $special->title ?? 'Sezon Spesiyali' }}</h6>
+                </div>
+            </div>
+        </div>
+        @if($special->image)
+        <div class="row mb32 mb-xs-24">
+            <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1">
+                <img alt="{{ $special->title }}" src="{{ asset('uploads/' . $special->image) }}" />
+            </div>
+        </div>
+        @endif
+        <div class="row">
+            <div class="col-md-7 col-md-offset-3 col-sm-8 col-sm-offset-2">
+                @if($special->title)
+                <h2 class="alt-font">
+                    {!! nl2br(e($special->title)) !!}
+                </h2>
+                @endif
 
-namespace App\Http\Controllers\Site;
+                        @if($special->desc)
+                            <div class="mb0">
+                                {!! $special->desc !!}
+                            </div>
+                        @endif
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\About;
-use App\Models\Banner;
-use App\Models\Gallery;
-use App\Models\Special;
-use App\Models\Video;
-use App\Models\Blog;
-use App\Models\BlogCategory;
-use App\Models\InstagramPost;
-
-class IndexController extends Controller
-{
-    public function index()
-    {
-        // Singleton Modeller (Tek kayıt)
-        $about = About::where('is_published', 1)->first();
-        $banner = Banner::where('is_published', 1)->first();
-
-        // Orderable (Sıralı) Modeller
-        $galleries = Gallery::where('is_published', 1)->orderBy('order', 'asc')->get();
-        $specials = Special::where('is_published', 1)->orderBy('order', 'asc')->get();
-        $videos = Video::where('is_published', 1)->orderBy('order', 'asc')->get();
-
-        // Blog Verileri (İlişkisiyle birlikte)
-        $latestBlogs = Blog::with('category')
-            ->where('is_published', 1)
-            ->orderBy('created_at', 'desc')
-            ->take(6)
-            ->get();
-
-        $blogCategories = BlogCategory::where('is_published', 1)->get();
-
-        // Instagram Postları
-        $instagramPosts = InstagramPost::where('is_published', 1)
-            ->orderBy('posted_at', 'desc')
-            ->take(12)
-            ->get();
-
-        return view('site.index', compact(
-            'about',
-            'banner',
-            'galleries',
-            'specials',
-            'videos',
-            'latestBlogs',
-            'blogCategories',
-            'instagramPosts'
-        ));
-    }
-}
+                        @if($special->price)
+                            <span class="block bold mt16" style="font-size: 20px;">
+                                {{ number_format($special->price, 0, ',', '.') }}₺
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            </section>
+    @endforeach
+@endif
