@@ -45,4 +45,22 @@ class Setting extends Model
             }
         });
     }
+
+    // app/Models/Setting.php
+public function getInstagramPosts($limit = 6)
+{
+    if (!$this->instagram_access_token) return [];
+
+    return \Illuminate\Support\Facades\Cache::remember('insta_posts', 3600, function () use ($limit) {
+        try {
+            $url = "https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp&access_token={$this->instagram_access_token}";
+            $response = file_get_contents($url);
+            $data = json_decode($response, true);
+
+            return array_slice($data['data'] ?? [], 0, $limit);
+        } catch (\Exception $e) {
+            return [];
+        }
+    });
+}
 }

@@ -8,7 +8,7 @@ use App\Http\Controllers\Site\Menu\IndexController as MenuIndexController;
 use App\Http\Controllers\Site\Permission\IndexController as PermissionIndexController;
 
 use Illuminate\Http\Request;
-
+use Spatie\Sitemap\SitemapGenerator;
 
 Route::get('/', [IndexController::class, 'index'])->name('site.index');
 Route::get('/blog', [BlogIndexController::class, 'index'])->name('site.blog.index');
@@ -19,6 +19,8 @@ Route::get('/acik-riza-metni', [PermissionIndexController::class, 'acikriza'])->
 
 
 
+
+SitemapGenerator::create('https://alibabakofte.com.tr')->writeToFile(public_path('sitemap.xml'));
 
 Route::get('/instagram/callback', function (Request $request) {
     // Eğer Meta bir doğrulama kodu gönderdiyse direkt döndür
