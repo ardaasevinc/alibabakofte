@@ -25,6 +25,7 @@ class Setting extends Model
                 'MAIL_PASSWORD' => $setting->mail_password,
                 'MAIL_FROM_ADDRESS' => $setting->mail_from_address,
                 'MAIL_FROM_NAME' => $setting->mail_from_name,
+                'FACEBOOK_ACCESS_TOKEN' => $setting->facebook_access_token,
             ];
 
             try {

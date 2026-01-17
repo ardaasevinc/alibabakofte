@@ -16,7 +16,10 @@ class SettingResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Sistem Ayarları';
 
-    public static function canCreate(): bool { return Setting::count() < 1; }
+    public static function canCreate(): bool
+    {
+        return Setting::count() < 1;
+    }
 
     public static function form(Form $form): Form
     {
@@ -69,28 +72,34 @@ class SettingResource extends Resource
                                 ]),
                             ]),
 
-  Forms\Components\Tabs\Tab::make('Analiz & Takip')
-    ->icon('heroicon-o-presentation-chart-line')
-    ->schema([
-        Forms\Components\Grid::make(2)->schema([
-            Forms\Components\Section::make('Meta (Facebook) Pixel')
-                ->description('Buraya <script> ile başlayan tüm kodu yapıştırın.')
-                ->schema([
-                    Forms\Components\Textarea::make('facebook_pixel_code')
-                        ->label('Pixel Kodu')
-                        ->rows(15) // Kutu boyunu uzattık
-                        ->placeholder('...'),
-                ]),
-            Forms\Components\Section::make('Google Analytics')
-                ->description('Buraya G- ile başlayan Google etiket kodunu yapıştırın.')
-                ->schema([
-                    Forms\Components\Textarea::make('google_analytics_code')
-                        ->label('Analytics Kodu')
-                        ->rows(15) // Kutu boyunu uzattık
-                        ->placeholder('...'),
-                ]),
-        ]),
-    ]),
+                        Forms\Components\Tabs\Tab::make('Analiz & Takip')
+                            ->icon('heroicon-o-presentation-chart-line')
+                            ->schema([
+                                Forms\Components\Grid::make(2)->schema([
+                                    Forms\Components\Section::make('Meta (Facebook) Pixel')
+                                        ->description('Buraya <script> ile başlayan tüm kodu yapıştırın.')
+                                        ->schema([
+                                            Forms\Components\Textarea::make('facebook_pixel_code')
+                                                ->label('Pixel Kodu')
+                                                ->rows(15) // Kutu boyunu uzattık
+                                                ->placeholder('...'),
+                                        ]),
+                                    Forms\Components\Section::make('Google Analytics')
+                                        ->description('Buraya G- ile başlayan Google etiket kodunu yapıştırın.')
+                                        ->schema([
+                                            Forms\Components\Textarea::make('google_analytics_code')
+                                                ->label('Analytics Kodu')
+                                                ->rows(15) // Kutu boyunu uzattık
+                                                ->placeholder('...'),
+                                        ]),
+                                    Forms\Components\Textarea::make('facebook_access_token')
+                                        ->label('Facebook CAPI Access Token')
+                                        ->rows(5)
+                                        ->placeholder('EAAb...')
+                                        ->helperText('Meta panelinden oluşturduğunuz uzun erişim jetonunu buraya yapıştırın.')
+                                        ->columnSpanFull(),
+                                ]),
+                            ]),
 
                         // 4. SEKME: SİSTEM
                         Forms\Components\Tabs\Tab::make('Sistem (ENV)')
@@ -99,7 +108,7 @@ class SettingResource extends Resource
                                 Forms\Components\Grid::make(12)->schema([
                                     Forms\Components\Section::make('Uygulama')->columnSpan(4)->schema([
                                         Forms\Components\TextInput::make('app_url'),
-                                        Forms\Components\Select::make('app_env')->options(['local'=>'Local','production'=>'Production']),
+                                        Forms\Components\Select::make('app_env')->options(['local' => 'Local', 'production' => 'Production']),
                                         Forms\Components\Toggle::make('app_debug'),
                                         Forms\Components\TextInput::make('instagram_access_token'),
                                     ]),
@@ -125,7 +134,7 @@ class SettingResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('email'),
                 Tables\Columns\TextColumn::make('phone'),
-                Tables\Columns\BadgeColumn::make('app_env')->colors(['danger'=>'local','success'=>'production']),
+                Tables\Columns\BadgeColumn::make('app_env')->colors(['danger' => 'local', 'success' => 'production']),
             ])
             ->actions([Tables\Actions\EditAction::make()])
             ->bulkActions([]);
