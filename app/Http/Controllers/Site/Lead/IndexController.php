@@ -13,7 +13,7 @@ class IndexController extends Controller
 {
     public function whatsapp()
     {
-        // Sabit telefon numarası veya dinamik olarak ayarlanabilir
+        
         $phone = '905352855696';
         return $this->processLead('meta-whatsapp', "https://wa.me/{$phone}");
     }
@@ -26,7 +26,7 @@ class IndexController extends Controller
 
     private function processLead($buttonId, $targetUrl)
     {
-        // 1. GÜVENLİK: Bot ve Prefetch (Ön yükleme) engelleme
+        
         if (
             request()->header('X-Purpose') == 'preview' ||
             request()->header('X-Moz') == 'prefetch' ||
@@ -74,26 +74,24 @@ class IndexController extends Controller
                 ],
             ]);
 
-            // META CAPI GÖNDERİMİ
-            // Parametreler: 1.Olay Adı, 2.Kullanıcı Verileri, 3.Olay ID, 4.Test Kodu
-            // NOT: Test bittikten sonra 'TEST24572' yerine null yazmayı unutmayın.
-            MetaCapiService::sendEvent(
-                'Lead',
-                [
-                    'external_id' => hash('sha256', (string) $lead->id),
-                    'fbc' => $lead->fbclid ? "fb.1." . time() . "." . $lead->fbclid : null,
-                    'event_source_url' => $previousUrl,
-                ],
-                $eventId,
-                'TEST24572' // Sizin Meta panelindeki test kodunuz
-            );
+           
+           MetaCapiService::sendEvent(
+    'Lead', 
+    [
+        'external_id' => hash('sha256', (string) $lead->id),
+        'fbc' => $lead->fbclid ? "fb.1." . time() . "." . $lead->fbclid : null,
+        'event_source_url' => $previousUrl,
+    ], 
+    $eventId, 
+    null 
+);
 
         } catch (\Exception $e) {
-            // Hata olursa logla ama kullanıcıyı bekletme
+          
             Log::error("Ali Baba Lead Hatası: " . $e->getMessage());
         }
 
-        // 4. SONUÇ: Kullanıcıyı hedef URL'ye (WhatsApp veya Menü) uçur.
+       
         return redirect()->to($targetUrl);
     }
 }
