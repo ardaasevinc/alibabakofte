@@ -27,9 +27,27 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            
+            // --- Marka ve Logo Ayarları ---
+            ->brandName('Ali Baba Köfte')
+            ->brandLogo(asset('site/alibaba/logos/logo.svg')) // Açık tema logosu
+            ->darkModeBrandLogo(asset('site/alibaba/logos/logo-white.svg')) // Koyu tema logosu
+            ->brandLogoHeight('3rem')
+            ->favicon(asset('site/alibaba/logos/favicon.svg'))
+            
+            // --- Navigasyon ve Sidebar Ayarları ---
+            ->sidebarCollapsible() // Sidebar'ı tamamen daraltılabilir yapar
+            ->navigationGroups([
+                'Sipariş Yönetimi',
+                'İçerik Yönetimi',
+                'Sistem Ayarları',
+            ])
+            
+            // --- Renk Paleti (Amber/Turuncu Köfte Temasına Uygun) ---
             ->colors([
                 'primary' => Color::Amber,
             ])
+            
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
