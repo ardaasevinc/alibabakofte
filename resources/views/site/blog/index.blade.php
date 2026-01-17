@@ -13,10 +13,10 @@
                                 <div class="ribbon mb24">
                                     <h6 class="uppercase mb0">
                                         @if($blog->category)
-                                            | {{ $blog->category->title }}
+                                            {{ $blog->category->title }}
                                         @endif
                                     </h6>
-                                    <span>{{ $blog->created_at->translatedFormat('d F Y') }}</span>
+                                    <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
                                 </div>
                                 <h2 class="alt-font">{{ $blog->title }}</h2>
                             </div>
