@@ -13,7 +13,7 @@
                     6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) uyarınca aşağıda açıklanan kapsamda işlenmektedir.
                 </p>
 
-                <h2 class="uppercase">A. İşlenen Kişisel Verileriniz ve İşleme Amaçları</h2>
+                <h2 class="alt-font">A. İşlenen Kişisel Verileriniz ve İşleme Amaçları</h2>
                 <p>
                     Web sitemizde herhangi bir iletişim veya kayıt formu bulunmamaktadır. Ancak, sitenin işleyişi ve analizi kapsamında şu veriler işlenmektedir:
                 </p>
@@ -29,14 +29,14 @@
                     <strong>İşleme Amaçları:</strong> Sitemizin performansını ölçmek, reklam kampanyalarımızın (Meta/Google) verimliliğini analiz etmek ve ziyaretçi deneyimini iyileştirmektir.
                 </p>
 
-                <h2 class="uppercase">B. Kişisel Verilerin Aktarılması ve Sunucu Lokasyonu</h2>
+                <h2 class="alt-font">B. Kişisel Verilerin Aktarılması ve Sunucu Lokasyonu</h2>
                 <p>
                     Web sitemiz <strong>Hetzner Online GmbH</strong> bünyesinde, Avrupa Birliği (Almanya/Finlandiya) lokasyonlu sunucularda barındırılmaktadır. 
                     Bu kapsamda, siteyi ziyaret etmenizle oluşan trafik verileri teknik altyapı gereği <strong>yurt dışına aktarılmaktadır.</strong> <br><br>
                     Ayrıca, <strong>Google Analytics</strong> ve <strong>Meta Pixel</strong> kullanımı nedeniyle analiz verileriniz ilgili servis sağlayıcıların yurt dışı sunucularına aktarılmaktadır.
                 </p>
 
-                <h2 class="uppercase">C. Veri Toplama Yöntemi ve Hukuki Sebepler</h4>
+                <h2 class="alt-font">C. Veri Toplama Yöntemi ve Hukuki Sebepler</h4>
                 <p>
                     Verileriniz, çerezler (cookies) ve takip pikselleri aracılığıyla otomatik yöntemlerle toplanmaktadır.
                 </p>
@@ -45,7 +45,7 @@
                     ve reklam/analiz çerezleri için sizin <strong>“Açık Rızanız”</strong> dır.
                 </p>
 
-                <h4 class="uppercase">D. İlgili Kişi Olarak Haklarınız</h4>
+                <h2 class="alt-font">D. İlgili Kişi Olarak Haklarınız</h2>
                 <p>
                     KVKK’nın 11. maddesi uyarınca; verilerinizin işlenip işlenmediğini öğrenme, düzeltme talep etme veya silinmesini isteme haklarına sahipsiniz. 
                     Başvurularınızı işletmemize yazılı olarak veya <strong>[E-posta Adresiniz]</strong> üzerinden iletebilirsiniz.

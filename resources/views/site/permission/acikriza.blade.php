@@ -15,7 +15,7 @@
                 </p>
 
                 <div class="mb40">
-                    <h2 class="uppercase">1. Analiz ve Pazarlama Faaliyetleri</h2>
+                    <h2 class="alt-font">1. Analiz ve Pazarlama Faaliyetleri</h2>
                     <p>
                         Sitedeki kullanıcı deneyimini iyileştirmek ve reklam performansını ölçmek amacıyla kullanılan 
                         <strong>Google Analytics</strong> ve <strong>Meta (UTM Content/Pixel)</strong> çerezlerinin cihazıma yerleştirilmesine, 
@@ -25,7 +25,7 @@
                 </div>
 
                 <div class="mb40">
-                    <h2 class="uppercase">2. Verilerin Yurt Dışına Aktarılması</h2>
+                    <h2 class="alt-font">2. Verilerin Yurt Dışına Aktarılması</h2>
                     <p>
                         Web sitesinin teknik altyapısını sağlayan <strong>Hetzner Online GmbH</strong> sunucularının Avrupa Birliği (Almanya/Finlandiya) 
                         lokasyonunda bulunması ve analiz hizmeti sağlayan üçüncü taraf servislerin (Google, Meta) merkezlerinin yurt dışında olması sebebiyle; 
