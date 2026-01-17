@@ -3,7 +3,7 @@
         {{-- Sol Taraf: Adres (Sadece Şehir/Semt Kısmı veya Kısa Adres) --}}
         <div class="col-sm-4 text-center-xs">
             <span class="sub">
-                <a href="{{ $settings?->map_link }}">{{ $settings?->address ? Str::limit($settings->address, 30) : 'Çatalca, İstanbul' }}</a>
+                <a style="color:white !important;" href="{{ $settings?->map_link }}">{{ $settings?->address ? Str::limit($settings->address, 30) : 'Çatalca, İstanbul' }}</a>
             </span>
         </div>
 
