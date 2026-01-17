@@ -15,8 +15,8 @@ class IndexController extends Controller
     $latestBlogs = Blog::with('category')
             ->where('is_published', 1)
             ->orderBy('created_at', 'desc')
-            ->take(6)
-            ->get();
+            ->paginate(2);
+            
 
         $blogCategories = BlogCategory::where('is_published', 1)->get();
         return view('site.blog.index', compact(
