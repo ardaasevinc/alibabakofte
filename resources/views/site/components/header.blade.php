@@ -9,7 +9,7 @@
                 <div class="row">
                     <div class="col-sm-12 text-center">
                         <a href="{{ route('site.index') }}">
-                            <img alt="Logo" class="logo" src="{{ asset('site/alibaba/logos/logo.svg') }}" />
+                            <img alt="Logo" class="logo" src="{{ asset('uploads/' . $settings?->logo_dark) }}" />
                         </a>
                     </div>
                 </div>
