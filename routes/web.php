@@ -6,6 +6,7 @@ use App\Http\Controllers\Site\IndexController;
 use App\Http\Controllers\Site\Blog\IndexController as BlogIndexController;
 use App\Http\Controllers\Site\Menu\IndexController as MenuIndexController;
 use App\Http\Controllers\Site\Permission\IndexController as PermissionIndexController;
+use App\Http\Controllers\Site\Lead\IndexController as LeadController;
 
 use Illuminate\Http\Request;
 use Spatie\Sitemap\SitemapGenerator;
@@ -21,6 +22,9 @@ Route::get('/acik-riza-metni', [PermissionIndexController::class, 'acikriza'])->
 
 
 SitemapGenerator::create('https://alibabakofte.com.tr')->writeToFile(public_path('sitemap.xml'));
+
+Route::get('/go-whatsapp', [LeadController::class, 'whatsapp'])->name('lead.whatsapp');
+Route::get('/go-menu', [LeadController::class, 'menu'])->name('lead.menu');
 
 Route::get('/instagram/callback', function (Request $request) {
     // Eğer Meta bir doğrulama kodu gönderdiyse direkt döndür

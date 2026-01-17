@@ -35,7 +35,7 @@
                                     
                             </li>
                             <li>
-                                <a href="{{ route('site.menu.index') }}" class="inner-link">Menü</a>
+                                <a href="{{ route('lead.menu') }}" class="inner-link">Menü</a>
                             </li>
                             <li>
                                 <a href="{{ Request::is('/') ? '#special' : url('/#special') }}"

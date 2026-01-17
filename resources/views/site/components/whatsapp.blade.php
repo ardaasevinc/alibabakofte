@@ -10,7 +10,6 @@
             align-items: center;
             text-decoration: none !important;
             transition: transform 0.3s ease;
-            /* İstediğin 0.5px border ve sade görünüm */
             border: 0.5px solid rgba(37, 211, 102, 0.5); 
             border-radius: 50px;
             background: #0b141a; /* WhatsApp Karanlık Mod Rengi */
@@ -81,7 +80,11 @@
         }
     </style>
 
-    <a href="https://wa.me/{{ preg_replace('/\D/', '', $settings->phone) }}" target="_blank" class="wp-float-btn">
+    {{--
+    DİKKAT: href kısmını wa.me yerine kendi rotamıza yönlendirdik.
+    Bu sayede tıklama anında Lead kaydı ve Meta CAPI tetiklenecek.
+    --}}
+    <a href="{{ route('lead.whatsapp') }}" target="_blank" class="wp-float-btn">
         <div class="wp-inner-content">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#25D366">
                 <path
