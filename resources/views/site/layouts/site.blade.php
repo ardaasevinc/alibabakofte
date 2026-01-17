@@ -40,15 +40,26 @@
     {{-- Fontlar --}}
     <link href='https://fonts.googleapis.com/css?family=Montserrat%7CInconsolata:400,700%7CPathway+Gothic+One' rel='stylesheet' type='text/css'>
 
-    {{-- Google Analytics Code --}}
-    @if($settings?->google_analytics_code)
-        {!! $settings?->google_analytics_code !!}
-    @endif
-
-    {{-- Facebook Pixel Code --}}
-    @if($settings?->facebook_pixel_code)
-        {!! $settings->facebook_pixel_code !!}
-    @endif
+<script>
+  !function(f,b,e,v,n,t,s)
+  {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+  if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+  n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];
+  s.parentNode.insertBefore(t,s)}(window, document,'script',
+  'https://connect.facebook.net/en_US/fbevents.js');
+  
+  fbq('init', '{{ $settings->facebook_pixel_code }}'); // DB'den sadece ID'yi aldık
+  fbq('track', 'PageView');
+</script>
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', '{{ $settings->google_analytics_code }}');
+</script>
 
     {{-- UTM Takibi İçerik Kontrolü --}}
     @if(request()->has('utm_content'))

@@ -24,7 +24,7 @@ class IndexController extends Controller
 
     private function processLead($buttonId, $targetUrl)
     {
-        // 1. GÜVENLİK: Bot ve Prefetch engelleme (En hızlı şekilde)
+        // 1. GÜVENLİK: Bot ve Prefetch engelleme
         if (request()->header('X-Purpose') == 'preview' || request()->header('X-Moz') == 'prefetch' || request()->header('Purpose') == 'prefetch') {
             return redirect()->to($targetUrl);
         }
@@ -37,7 +37,7 @@ class IndexController extends Controller
             return redirect()->to($targetUrl);
         }
 
-        // 3. GÜVENLİK: Mükerrer Tıklama Kilidi
+        // 3. GÜVENLİK: Mükerrer Tıklama Kilidi (10 saniye)
         $lockKey = 'lead_lock_' . md5(request()->ip() . $buttonId);
         if (Cache::has($lockKey)) {
             return redirect()->to($targetUrl);
@@ -48,7 +48,7 @@ class IndexController extends Controller
         parse_str(parse_url($previousUrl, PHP_URL_QUERY) ?? '', $urlQueries);
 
         try {
-            // VERİTABANI KAYDI: Çok hızlı çalışır, kullanıcıyı bekletmez.
+            // VERİTABANI KAYDI
             $lead = Lead::create([
                 'type' => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu',
                 'event_id' => $eventId,
@@ -64,20 +64,19 @@ class IndexController extends Controller
                 ],
             ]);
 
-            // META CAPI: Burası yavaşlığın sebebiydi. 
-            // MetaCapiService içinde 'timeout' eklediğimizi varsayıyoruz.
-            // Eğer hala yavaşsa, MetaCapiService dosyasını da güncellememiz gerekecek.
+            // META CAPI GÖNDERİMİ
+            // 4. Parametre: Test Kodun (TEST24572). Canlıya alırken bunu null yapabilirsin.
             MetaCapiService::sendEvent('Lead', [
                 'external_id' => hash('sha256', (string) $lead->id),
                 'fbc' => $lead->fbclid ? "fb.1." . time() . "." . $lead->fbclid : null,
                 'event_source_url' => $previousUrl,
-            ], $eventId);
+            ], $eventId, 'TEST24572');
 
         } catch (\Exception $e) {
             Log::error("Ali Baba Lead Hatası: " . $e->getMessage());
         }
 
-        // 4. HIZLI YÖNLENDİRME: Meta yanıtı ne olursa olsun kullanıcıyı uçur.
+        // 4. HIZLI YÖNLENDİRME
         return redirect()->to($targetUrl);
     }
 }
