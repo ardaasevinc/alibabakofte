@@ -54,6 +54,21 @@
                         </ul>
                     </div>
 
+                   <div class="legal-links">
+        <ul class="list-unstyled">
+            <li class="mb8">
+                <a href="{{ route('site.permissions.kvkk') }}" class="fade-half hover-white" style="font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">
+                    KVKK Aydınlatma Metni
+                </a>
+            </li>
+            <li>
+                <a href="{{ route('site.permissions.acikriza') }}" class="fade-half hover-white" style="font-size: 11px; letter-spacing: 1px; text-transform: uppercase;">
+                    Açık Rıza Beyanı
+                </a>
+            </li>
+        </ul>
+    </div>
+
                 </div>
                 </div>
                 </div>
