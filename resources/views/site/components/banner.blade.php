@@ -8,7 +8,7 @@
                         <ul class="slides">
                             @foreach($banner as $item)
                                 @if(!empty($item->image))
-                                    <li class="v-align-transform" style="height: 700px;">
+                                    <li class="v-align-transform" style="height: 900px;">
                                         <img alt="{{ $item->title ?? 'Ali Baba Köfte' }}" 
                                              src="{{ asset('uploads/' . $item->image) }}" />
                                     </li>
