@@ -54,19 +54,7 @@
                                 <a href="{{ route('site.blog.index') }}">Blog</a>
                             </li>
 
-                             <li class="has-dropdown">
-                                <a href="#"
-                                    class="inner-link">İzin Politikası</a>
-                                    <ul class="text-left">
-                                    <li>
-                                        <a href="{{ route('site.permission.kvkk') }}">KVKK Metni</a>
-                                    </li>
-                                    <li>
-                                        <a href="{{ route('site.permission.acikriza') }}">Açık Rıza Onayı</a>
-                                    </li>
-                                   
-                                </ul>
-                            </li>
+                            
                         </ul>
                     </div>
                 </div>
