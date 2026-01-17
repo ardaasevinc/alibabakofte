@@ -36,24 +36,6 @@
                 @endif
                 </div>
 
-                {{-- Sabit Alt Alanlar --}}
-                <div class="row mb64 mb-xs-24">
-                    <div class="col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 text-center">
-                        <p class="alt-font mb8">
-                            "1997'den beri Çatalca'da değişmeyen tek adres. Ali Baba'nın o meşhur özel soslu köftesi gerçek bir klasik."
-                        </p>
-                        <span class="sub">Müşteri Yorumu - Google</span>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4 col-md-offset-4 col-sm-6 col-sm-offset-3 text-center">
-                        <p class="alt-font mb8">
-                            "İki kuşaktır süregelen bu aile geleneği, Çatalca'nın yerel lezzetlerini en doğal haliyle soframıza
-                            taşıyor."
-                        </p>
-                        <span class="sub">Gurme Rehberi</span>
-                    </div>
-                </div>
-                </div>
+               
     </section>
 @endif
