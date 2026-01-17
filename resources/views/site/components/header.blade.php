@@ -59,10 +59,10 @@
                                     class="inner-link">İzin Politikası</a>
                                     <ul class="text-left">
                                     <li>
-                                        <a href="index.html">KVKK Metni</a>
+                                        <a href="{{ route('site.permission.kvkk') }}">KVKK Metni</a>
                                     </li>
                                     <li>
-                                        <a href="index-contact-form.html">Açık Rıza Onayı</a>
+                                        <a href="{{ route('site.permission.acikriza') }}">Açık Rıza Onayı</a>
                                     </li>
                                    
                                 </ul>

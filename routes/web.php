@@ -14,8 +14,8 @@ Route::get('/', [IndexController::class, 'index'])->name('site.index');
 Route::get('/blog', [BlogIndexController::class, 'index'])->name('site.blog.index');
 Route::get('/menu', [MenuIndexController::class, 'index'])->name('site.menu.index');
 
-Route::get('/permission/kvkk', [PermissionIndexController::class, 'kvkk'])->name('site.permission.kvkk');
-Route::get('/permission/cookies', [PermissionIndexController::class, 'acikriza'])->name('site.permission.acikriza');
+Route::get('/kisisel-verilerin-korunmasi-kanunu', [PermissionIndexController::class, 'kvkk'])->name('site.permission.kvkk');
+Route::get('/acik-riza-metni', [PermissionIndexController::class, 'acikriza'])->name('site.permission.acikriza');
 
 
 
