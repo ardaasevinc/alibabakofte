@@ -24,17 +24,18 @@ class SettingResource extends Resource
             ->schema([
                 Forms\Components\Tabs::make('Settings')
                     ->tabs([
+                        // 1. SEKME: GENEL
                         Forms\Components\Tabs\Tab::make('Genel ve İletişim')
                             ->icon('heroicon-o-home')
                             ->schema([
                                 Forms\Components\Grid::make(12)->schema([
                                     Forms\Components\Section::make('Görseller')->columnSpan(4)->schema([
-                                        Forms\Components\FileUpload::make('logo_light')->disk('uploads')->directory('settings')->image(),
-                                        Forms\Components\FileUpload::make('logo_dark')->disk('uploads')->directory('settings')->image(),
-                                        Forms\Components\FileUpload::make('favicon')->disk('uploads')->directory('settings')->image(),
+                                        Forms\Components\FileUpload::make('logo_light')->label('Logo (Açık)')->disk('uploads')->directory('settings'),
+                                        Forms\Components\FileUpload::make('logo_dark')->label('Logo (Koyu)')->disk('uploads')->directory('settings'),
+                                        Forms\Components\FileUpload::make('favicon')->label('Favicon')->disk('uploads')->directory('settings'),
                                     ]),
-                                    Forms\Components\Section::make('İletişim')->columnSpan(8)->schema([
-                                        Forms\Components\TextInput::make('slogan')->label('Slogan'),
+                                    Forms\Components\Section::make('İletişim Bilgileri')->columnSpan(8)->schema([
+                                        Forms\Components\TextInput::make('slogan'),
                                         Forms\Components\Grid::make(2)->schema([
                                             Forms\Components\TextInput::make('email')->email(),
                                             Forms\Components\TextInput::make('phone'),
@@ -45,49 +46,44 @@ class SettingResource extends Resource
                                 ]),
                             ]),
 
+                        // 2. SEKME: SEO & SOSYAL
                         Forms\Components\Tabs\Tab::make('SEO & Sosyal Medya')
                             ->icon('heroicon-o-globe-alt')
                             ->schema([
                                 Forms\Components\Grid::make(12)->schema([
-                                    Forms\Components\Section::make('SEO')->columnSpan(4)->schema([
+                                    Forms\Components\Section::make('SEO Ayarları')->columnSpan(4)->schema([
                                         Forms\Components\TextInput::make('meta_title'),
                                         Forms\Components\Textarea::make('meta_desc'),
                                         Forms\Components\TextInput::make('meta_keywords'),
                                     ]),
-                                    Forms\Components\Section::make('Linkler')->columnSpan(8)->schema([
+                                    Forms\Components\Section::make('Sosyal Medya & Linkler')->columnSpan(8)->schema([
                                         Forms\Components\Grid::make(2)->schema([
                                             Forms\Components\TextInput::make('facebook_url')->url(),
                                             Forms\Components\TextInput::make('instagram_url')->url(),
                                             Forms\Components\TextInput::make('map_link'),
                                             Forms\Components\TextInput::make('gpage_link'),
                                         ]),
-                                        Forms\Components\Textarea::make('map_iframe')->rows(3),
-                                        Forms\Components\TextInput::make('gpage_comment')->columnSpanFull(),
+                                        Forms\Components\TextInput::make('gpage_comment')->label('Google Yorum Linki')->columnSpanFull(),
+                                        Forms\Components\Textarea::make('map_iframe')->label('Harita Iframe')->rows(3),
                                     ]),
                                 ]),
                             ]),
 
-                        Forms\Components\Tabs\Tab::make('Analiz & Takip')
-                            ->icon('heroicon-o-presentation-chart-line')
-                            ->schema([
-                                Forms\Components\Grid::make(12)->schema([
-                                    Forms\Components\Section::make('Meta (Facebook)')->columnSpan(6)->schema([
-                                        Forms\Components\TextInput::make('facebook_pixel_id')->label('Pixel ID'),
-                                        Forms\Components\Textarea::make('facebook_access_token')->label('CAPI Token')->rows(6),
-                                    ]),
-                                    Forms\Components\Section::make('Google')->columnSpan(6)->schema([
-                                        Forms\Components\TextInput::make('google_analytics_id')->label('Analytics ID'),
-                                        Forms\Components\TextInput::make('google_tag_manager_id')->label('GTM ID'),
-                                        Forms\Components\Textarea::make('google_tag_manager_noscript')->label('GTM NoScript')->rows(4),
-                                    ]),
-                                ]),
-                            ]),
+                        // 3. SEKME: ANALİZ (İSTEDİĞİN RİCH EDİTOR ALANLARI)
+                     Forms\Components\Tabs\Tab::make('Analiz & Takip')
+    ->schema([
+        Forms\Components\RichEditor::make('facebook_pixel_code')
+            ->label('Facebook Pixel Kodu'),
+        Forms\Components\RichEditor::make('google_analytics_code')
+            ->label('Google Analytics Kodu'),
+    ]),
 
+                        // 4. SEKME: SİSTEM
                         Forms\Components\Tabs\Tab::make('Sistem (ENV)')
                             ->icon('heroicon-o-cpu-chip')
                             ->schema([
                                 Forms\Components\Grid::make(12)->schema([
-                                    Forms\Components\Section::make('App Config')->columnSpan(4)->schema([
+                                    Forms\Components\Section::make('Uygulama')->columnSpan(4)->schema([
                                         Forms\Components\TextInput::make('app_url'),
                                         Forms\Components\Select::make('app_env')->options(['local'=>'Local','production'=>'Production']),
                                         Forms\Components\Toggle::make('app_debug'),
