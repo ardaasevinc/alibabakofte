@@ -89,8 +89,8 @@
             </svg>
             <span class="wp-text">WhatsApp</span>
             <div class="wp-avatars">
-                <img src="{{ asset('site/img/avatar1.jpg') }}" alt="Destek">
-                <img src="{{ asset('site/img/avatar2.jpg') }}" alt="Destek">
+                <img src="{{ asset('site/alibaba/logos/logo-circle-red.svg') }}" alt="Destek">
+                <img src="{{ asset('site/alibaba/logos/logo-circle-white.svg') }}" alt="Destek">
             </div>
         </div>
     </a>
