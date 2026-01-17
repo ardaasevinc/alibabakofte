@@ -17,10 +17,7 @@ class BannerResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-bar';
 
     // Singleton: Sadece 1 adet banner oluşturulabilir
-    public static function canCreate(): bool
-    {
-        return Banner::count() < 1;
-    }
+  
 
     public static function form(Form $form): Form
     {
