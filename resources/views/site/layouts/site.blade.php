@@ -4,20 +4,20 @@
 <head>
     <meta charset="utf-8">
     {{-- SEO Başlık --}}
-    <title>{{ $settings->meta_title ?? 'Meşhur Çatalcalı Ali Baba Köfte Salonu | 1997\'den Beri Gelen Lezzet' }}</title>
+    <title>{{ $settings?->meta_title ?? 'Meşhur Çatalcalı Ali Baba Köfte Salonu | 1997\'den Beri Gelen Lezzet' }}</title>
     
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {{-- SEO Meta Etiketleri --}}
-    <meta name="description" content="{{ $settings->meta_desc ?? 'Çatalca\'nın meşhur tarihi köftecisi Ali Baba Köfte Salonu. 1997\'den beri Çatalca merkezde değişmeyen reçetesiyle hizmet veren Ali Baba.' }}">
+    <meta name="description" content="{{ $settings?->meta_desc ?? 'Çatalca\'nın meşhur tarihi köftecisi Ali Baba Köfte Salonu. 1997\'den beri Çatalca merkezde değişmeyen reçetesiyle hizmet veren Ali Baba.' }}">
     <meta name="keywords" content="{{ $settings->meta_keywords ?? 'çatalca köfte, meşhur çatalca köftecisi, ali baba köfte çatalca, alibaba köfte' }}">
     <meta name="author" content="Ali Baba Köfte Salonu">
     <meta name="robots" content="index, follow">
 
     {{-- Open Graph (Sosyal Medya Paylaşım) --}}
-    <meta property="og:title" content="{{ $settings->meta_title }}">
-    <meta property="og:description" content="{{ $settings->meta_desc }}">
-    <meta property="og:image" content="{{ $settings->logo_dark ? asset('uploads/' . $settings->logo_dark) : asset('site/alibaba/logos/logo-white.svg') }}">
+    <meta property="og:title" content="{{ $settings?->meta_title }}">
+    <meta property="og:description" content="{{ $settings?->meta_desc }}">
+    <meta property="og:image" content="{{ $settings?->logo_dark ? asset('uploads/' . $settings?->logo_dark) : asset('site/alibaba/logos/logo-white.svg') }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:type" content="website">
 
@@ -29,9 +29,9 @@
     <link href="{{ asset('site/css/custom.css') }}" rel="stylesheet" type="text/css" media="all" />
 
     {{-- Favicon - Dinamik --}}
-    @if($settings->favicon)
-        <link rel="icon" type="image/png" href="{{ asset('uploads/' . $settings->favicon) }}">
-        <link rel="apple-touch-icon" href="{{ asset('uploads/' . $settings->favicon) }}">
+    @if($settings?->favicon)
+        <link rel="icon" type="image/png" href="{{ asset('uploads/' . $settings?->favicon) }}">
+        <link rel="apple-touch-icon" href="{{ asset('uploads/' . $settings?->favicon) }}">
     @else
         <link rel="icon" type="image/svg+xml" href="{{ asset('site/alibaba/logos/favicon.svg') }}">
         <link rel="alternate icon" type="image/png" href="{{ asset('site/alibaba/logos/favicon.png') }}">
