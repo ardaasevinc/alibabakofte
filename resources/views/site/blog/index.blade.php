@@ -12,11 +12,11 @@
                             <div class="col-sm-12 text-center">
                                 <div class="ribbon mb24">
                                     <h6 class="uppercase mb0">
-                                        {{ $blog->created_at->translatedFormat('d F Y') }}
                                         @if($blog->category)
                                             | {{ $blog->category->title }}
                                         @endif
                                     </h6>
+                                    <span>{{ $blog->created_at->translatedFormat('d F Y') }}</span>
                                 </div>
                                 <h2 class="alt-font">{{ $blog->title }}</h2>
                             </div>
