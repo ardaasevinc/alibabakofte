@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('site/alibaba/logos/favicon.svg'))
             
             // --- Navigasyon ve Sidebar Ayarları ---
-            ->sidebarCollapsible() // Sidebar'ı tamamen daraltılabilir yapar
+            ->sidebarCollapsibleOnDesktop() // Sidebar'ı tamamen daraltılabilir yapar
             ->navigationGroups([
                 'Sipariş Yönetimi',
                 'İçerik Yönetimi',
