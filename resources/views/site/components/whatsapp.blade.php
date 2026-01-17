@@ -55,7 +55,7 @@
         /* Mobil Uyumluluk */
         @media (max-width: 768px) {
             .wp-float-btn {
-                bottom: 30px;
+                bottom: 15px;
                 right: 50%;
                 transform: translateX(50%);
                 width: max-content;
