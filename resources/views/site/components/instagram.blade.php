@@ -1,5 +1,6 @@
 <a id="gallery"></a>
-<section class="instagram-marquee-section" style="padding: 0; overflow: hidden; background: transparent;">
+<section class="instagram-marquee-section"
+    style="padding: 0; overflow: hidden; background: transparent; margin-top:50px;">
     
     {{-- Ana Taşıyıcı: Mouse üzerine gelince akış durur (isteğe bağlı) --}}
     <div class="marquee-container" onmouseover="this.style.animationPlayState='paused'" onmouseout="this.style.animationPlayState='running'">
