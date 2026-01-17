@@ -1,7 +1,7 @@
 @if($specials && $specials->count() > 0)
     <a id="special"></a>
     @foreach($specials as $special)
-        <section class="pb0">
+        <section class="pb0 mb-40">
             <div class="container">
                 <div class="row mb64 mb-xs-40">
                     <div class="col-sm-12 text-center">
