@@ -7,12 +7,13 @@ use Illuminate\Http\Request;
 use App\Models\Lead;
 use App\Services\MetaCapiService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 
 class IndexController extends Controller
 {
     public function whatsapp()
     {
-        $phone = '905331959477'; // Ali Baba Köfte İletişim Hattı
+        $phone = '905331959477'; 
         return $this->processLead('meta-whatsapp', "https://wa.me/{$phone}");
     }
 
@@ -23,10 +24,28 @@ class IndexController extends Controller
 
     private function processLead($buttonId, $targetUrl)
     {
-        $eventId = 'ab_' . uniqid() . '_' . time();
+        // 1. GÜVENLİK: Botları ve Tarayıcı Ön Yüklemelerini (Prefetch) Engelle
+        if (request()->header('X-Purpose') == 'preview' || request()->header('X-Moz') == 'prefetch' || request()->header('Purpose') == 'prefetch') {
+            return redirect()->to($targetUrl);
+        }
+
         $previousUrl = url()->previous();
-        
-        // URL'den UTM parametrelerini ayıkla
+        $currentUrl = url()->current();
+
+        // 2. GÜVENLİK: Eğer kullanıcı sayfayı yeniliyorsa veya referer yoksa kayıt atma
+        // (Sadece başka bir sayfadan gelen tıklamaları kabul eder)
+        if ($previousUrl === $currentUrl || empty($previousUrl)) {
+            return redirect()->to($targetUrl);
+        }
+
+        // 3. GÜVENLİK: Mükerrer Tıklama Kilidi (Aynı kişi 10 saniye içinde tekrar kayıt atamaz)
+        $lockKey = 'lead_lock_' . md5(request()->ip() . $buttonId);
+        if (Cache::has($lockKey)) {
+            return redirect()->to($targetUrl);
+        }
+        Cache::put($lockKey, true, 10);
+
+        $eventId = 'ab_' . uniqid() . '_' . time();
         parse_str(parse_url($previousUrl, PHP_URL_QUERY) ?? '', $urlQueries);
 
         try {

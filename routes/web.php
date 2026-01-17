@@ -23,8 +23,8 @@ Route::get('/acik-riza-metni', [PermissionIndexController::class, 'acikriza'])->
 
 SitemapGenerator::create('https://alibabakofte.com.tr')->writeToFile(public_path('sitemap.xml'));
 
-Route::get('/go-whatsapp', [LeadController::class, 'whatsapp'])->name('lead.whatsapp');
-Route::get('/go-menu', [LeadController::class, 'menu'])->name('lead.menu');
+Route::get('/whatsapp-a-git', [LeadController::class, 'whatsapp'])->name('lead.whatsapp');
+Route::get('/menuye-git', [LeadController::class, 'menu'])->name('lead.menu');
 
 Route::get('/instagram/callback', function (Request $request) {
     // Eğer Meta bir doğrulama kodu gönderdiyse direkt döndür
