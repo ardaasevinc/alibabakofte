@@ -1,6 +1,5 @@
 <?php
 
-
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MenuItemResource\Pages;
@@ -10,6 +9,10 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Tables\Columns\TextInputColumn;
+use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 
 class MenuItemResource extends Resource
 {
@@ -23,7 +26,7 @@ class MenuItemResource extends Resource
             ->schema([
                 Forms\Components\Grid::make(12)
                     ->schema([
-                        // SOL KOLON (4)
+                        // SOL KOLON
                         Forms\Components\Section::make('Ürün Görseli ve Durum')
                             ->columnSpan(4)
                             ->schema([
@@ -31,42 +34,35 @@ class MenuItemResource extends Resource
                                     ->label('Ürün Fotoğrafı')
                                     ->disk('uploads')
                                     ->directory('menu-items')
-                                    ->image()
-                                    ->helperText('Ürünün iştah açıcı bir fotoğrafını yükleyin.'),
+                                    ->image(),
 
                                 Forms\Components\Select::make('menu_category_id')
                                     ->label('Kategori')
                                     ->relationship('category', 'title')
                                     ->searchable()
                                     ->preload()
-                                    ->required()
-                                    ->helperText('Bu ürünün hangi menü grubunda olduğunu seçin.'),
+                                    ->required(),
 
                                 Forms\Components\Toggle::make('is_published')
                                     ->label('Yayınla')
                                     ->default(true),
                             ]),
 
-                        // SAĞ KOLON (8)
+                        // SAĞ KOLON
                         Forms\Components\Section::make('Ürün Detayları')
                             ->columnSpan(8)
                             ->schema([
                                 Forms\Components\TextInput::make('title')
                                     ->label('Ürün Adı')
-                                    ->required()
-                                    ->helperText('Örn: Adana Kebap, Sufle, Espresso'),
+                                    ->required(),
 
                                 Forms\Components\TextInput::make('price')
                                     ->label('Fiyat')
                                     ->numeric()
-                                    ->prefix('₺')
-                                    ->helperText('Ürün satış fiyatı.'),
+                                    ->prefix('₺'),
 
                                 Forms\Components\RichEditor::make('desc')
                                     ->label('İçerik/Açıklama')
-                                    ->helperText('Ürün içeriği, gramaj veya alerjen bilgileri.')
-                                    ->fileAttachmentsDisk('uploads')
-                                    ->fileAttachmentsDirectory('menu-item-content')
                                     ->columnSpanFull(),
                             ]),
                     ]),
@@ -79,11 +75,31 @@ class MenuItemResource extends Resource
             ->reorderable('order')
             ->defaultSort('order', 'asc')
             ->columns([
-                Tables\Columns\ImageColumn::make('image')->disk('uploads'),
-                Tables\Columns\TextColumn::make('title')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('category.title')->label('Kategori'),
-                Tables\Columns\TextColumn::make('price')->money('TRY')->label('Fiyat'),
-                Tables\Columns\IconColumn::make('is_published')->boolean()->label('Durum'),
+                ImageColumn::make('image')
+                    ->disk('uploads')
+                    ->circular(),
+
+                TextColumn::make('title')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(), // Uzun isimleri alt satıra kırar
+
+                TextColumn::make('category.title')
+                    ->label('Kategori')
+                    ->badge()
+                    ->color('gray'),
+
+                // DARALTILMIŞ FİYAT INPUTU
+                TextInputColumn::make('price')
+                    ->label('Fiyat (₺)')
+                    ->type('number')
+                    ->width('100px') // Kutucuğu daralttık
+                    ->alignCenter(),
+
+                // HIZLI YAYINLAMA BUTONU (AÇ-KAPA)
+                ToggleColumn::make('is_published')
+                    ->label('Yayınla')
+                    ->alignCenter(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('menu_category_id')
