@@ -14,7 +14,7 @@
         content="{{ $settings?->meta_desc ?? 'Çatalca\'nın meşhur tarihi köftecisi Ali Baba Köfte Salonu. 1997\'den beri Çatalca merkezde değişmeyen reçetesiyle hizmet veren Ali Baba.' }}">
     <meta name="keywords"
         content="{{ $settings->meta_keywords ?? 'çatalca köfte, meşhur çatalca köftecisi, ali baba köfte çatalca, alibaba köfte' }}">
-    <meta name="author" content="Ali Baba Köfte Salonu">
+    <meta name="author" content="selquor.com">
     <meta name="robots" content="index, follow">
 
     {{-- Open Graph (Sosyal Medya Paylaşım) --}}
@@ -102,15 +102,7 @@
     <script src="{{ asset('site/js/parallax.min.js') }}"></script>
     <script src="{{ asset('site/js/scripts.js') }}"></script>
 
-    <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('/sw.js')
-        .then(reg => console.log('Service Worker Kayıt Başarılı!'))
-        .catch(err => console.log('Hata:', err));
-    });
-  }
-</script>
+    
 </body>
 
 </html>
