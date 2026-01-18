@@ -23,7 +23,7 @@
             @if($blog->image)
             <div class="row mb64 mb-xs-24">
                 <div class="col-sm-10 col-sm-offset-1 text-center">
-                    <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive" style="display: inline-block;" />
+                    <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive" style="display: inline-block; height:600px;" />
                 </div>
             </div>
             @endif

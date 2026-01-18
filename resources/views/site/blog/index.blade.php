@@ -25,7 +25,7 @@
                     <div class="row mb40 mb-xs-24">
                         <div class="col-sm-10 col-sm-offset-1 text-center">
                             <a href="{{ route('site.blog.detail', $blog->slug) }}">
-                                <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive" style="display:inline-block;" />
+                                <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive" style="display:inline-block; height:600px;" />
                             </a>
                         </div>
                     </div>
