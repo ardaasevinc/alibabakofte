@@ -34,7 +34,7 @@ class IndexController extends Controller
 
         $blogCategories = BlogCategory::where('is_published', 1)->get();
 
-        return view('site.blog.show', compact(
+        return view('site.blog.detail', compact(
             'blog',
             'blogCategories'
         ));
