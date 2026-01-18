@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             // --- Navigasyon ve Sidebar Ayarları ---
             ->sidebarCollapsibleOnDesktop() // Sidebar'ı tamamen daraltılabilir yapar
             ->maxContentWidth('full')
-            ->navigationTitle('Yönetim Paneli')
+            
 
             // --- Renk Paleti (Amber/Turuncu Köfte Temasına Uygun) ---
             ->colors([
