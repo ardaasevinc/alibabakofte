@@ -30,31 +30,40 @@ class IndexController extends Controller
             return redirect()->to($targetUrl);
         }
 
-        // 2. GÜVENLİK: Referer Kontrolü (Sadece sitemizden gelen tıklamayı kabul et)
-        // Eğer kullanıcı URL'yi kopyalayıp yapıştırırsa veya F5 yaparsa bu blok çalışmaz.
+        // 2. GÜVENLİK: Referer Kontrolü
         $referer = request()->headers->get('referer');
         if (!$referer || !str_contains($referer, request()->getHost())) {
             return redirect()->to($targetUrl);
         }
 
-        // 3. GÜVENLİK: Session Kilidi (Sayfa Yenileme Engeli)
-        // Kullanıcı bir kez tıkladığında 30 saniye boyunca aynı buton için yeni kayıt oluşturmaz.
+        // 3. GÜVENLİK: Session Kilidi
         $sessionKey = 'processed_' . $buttonId . '_' . md5($referer);
         if (session()->has($sessionKey)) {
             return redirect()->to($targetUrl);
         }
 
-        // 4. GÜVENLİK: Mükerrer Tıklama Kilidi (IP Tabanlı Cache)
+        // 4. GÜVENLİK: Mükerrer Tıklama Kilidi (IP Tabanlı)
         $lockKey = 'lead_lock_' . md5(request()->ip() . $buttonId);
         if (Cache::has($lockKey)) {
             return redirect()->to($targetUrl);
         }
 
-        // --- BURADAN SONRASI SADECE GERÇEK TIKLAMADA ÇALIŞIR ---
-        
+        // --- VERİ HAZIRLAMA ---
         $eventId = 'ab_' . uniqid() . '_' . time();
         $previousUrl = url()->previous();
         parse_str(parse_url($previousUrl, PHP_URL_QUERY) ?? '', $urlQueries);
+
+        // FBC (Facebook Click ID) Oluşturma
+        // Öncelik URL'deki fbclid, yoksa session, o da yoksa çerezdeki _fbc
+        $fbclid = $urlQueries['fbclid'] ?? session('fbclid') ?? request()->cookie('_fbc');
+        $fbc = null;
+        if ($fbclid) {
+            // Eğer fbclid zaten 'fb.1...' formatındaysa dokunma, değilse formatla
+            $fbc = str_starts_with($fbclid, 'fb.') ? $fbclid : "fb.1." . time() . "." . $fbclid;
+        }
+
+        // FBP (Browser ID) Çerezden Alınır
+        $fbp = request()->cookie('_fbp');
 
         try {
             // VERİTABANI KAYDI
@@ -63,28 +72,31 @@ class IndexController extends Controller
                 'event_id' => $eventId,
                 'utm_source' => $urlQueries['utm_source'] ?? session('utm_source', 'direct'),
                 'utm_campaign' => $urlQueries['utm_campaign'] ?? session('utm_campaign', '-'),
-                'fbclid' => $urlQueries['fbclid'] ?? session('fbclid'),
+                'fbclid' => $fbclid,
                 'ip_address' => request()->ip(),
                 'user_agent' => $userAgent,
                 'payload' => [
                     'came_from' => $previousUrl,
                     'button_id' => $buttonId,
+                    'fbp' => $fbp, // Analiz için kaydediyoruz
                 ],
             ]);
 
-            // META CAPI GÖNDERİMİ
+            // META CAPI GÖNDERİMİ (Zenginleştirilmiş Veri Seti)
             MetaCapiService::sendEvent(
                 'Lead', 
                 [
                     'external_id' => hash('sha256', (string) $lead->id),
-                    'fbc' => $lead->fbclid ? "fb.1." . time() . "." . $lead->fbclid : null,
+                    'fbc' => $fbc,
+                    'fbp' => $fbp, // Kaliteyi artıran en önemli parametre
+                    'client_ip_address' => request()->ip(), // Meta eşleştirme için zorunluya yakın
+                    'client_user_agent' => $userAgent, // Meta eşleştirme için zorunluya yakın
                     'event_source_url' => $previousUrl,
                 ], 
                 $eventId, 
-                null // Test bittiği için null
+                null
             );
 
-            // İşlem başarılı, session ve cache kilitlerini koy
             session()->put($sessionKey, time());
             Cache::put($lockKey, true, 30);
 
