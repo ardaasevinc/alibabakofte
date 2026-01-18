@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Model;
 
 class InstagramPost extends Model
 {
-   protected $fillable = [
+  protected $fillable = [
     'instagram_id',
     'media_type',
     'media_url',
+    'thumbnail_url',
     'permalink',
     'caption',
     'is_published',

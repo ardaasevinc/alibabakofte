@@ -32,21 +32,21 @@ class FetchInstagramPosts extends Command
             $data = $response->json('data');
 
             foreach ($data as $post) {
-                // Videolar için media_url asıl video dosyasını (.mp4) verir.
-                // Blade tarafında <video> etiketi bunu oynatabilir.
+
                 InstagramPost::updateOrCreate(
                     ['instagram_id' => $post['id']],
                     [
-                        'media_type' => $post['media_type'],
-                        'media_url' => $post['media_url'],
-                        'permalink' => $post['permalink'],
-                        'caption' => $post['caption'] ?? null,
-                        'posted_at' => Carbon::parse($post['timestamp']),
+                        'media_type'     => $post['media_type'],
+                        'media_url'      => $post['media_url'],            // Foto/video asıl link
+                        'thumbnail_url'  => $post['thumbnail_url'] ?? null, // *** EKLENDİ ***
+                        'permalink'      => $post['permalink'],
+                        'caption'        => $post['caption'] ?? null,
+                        'posted_at'      => Carbon::parse($post['timestamp']),
                     ]
                 );
             }
 
-            $this->info(count($data) . " adet içerik (video ve resim) başarıyla senkronize edildi.");
+            $this->info(count($data) . " adet içerik (video + resim + thumbnail) başarıyla senkronize edildi.");
         } else {
             $this->error("Hata: " . $response->body());
         }
