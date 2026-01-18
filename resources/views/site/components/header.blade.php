@@ -29,7 +29,7 @@
                         <ul class="menu inline-block mb-xs-16">
                             <li class="top-link hidden-xs">
                                 <a href="#top" class="inner-link">
-                                    <i class="ti-arrow-up"></i> Top</a>
+                                    <i class="ti-arrow-up"></i> Yukarı</a>
                             </li>
                             <li>
                                 <a href="{{ Request::is('/') ? '#about' : url('/#about') }}"
