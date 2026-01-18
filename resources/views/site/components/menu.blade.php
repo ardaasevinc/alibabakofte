@@ -14,7 +14,7 @@
         .tabbed-content .tabs li { flex: 0 0 auto !important; margin-bottom: 0 !important; float: none !important; display: inline-block !important; }
         .tabbed-content .tabs li .tab-title { padding: 10px 15px !important; white-space: nowrap !important; }
     }
-    .custom-modal { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(183, 0, 0, 0.4); backdrop-filter: blur(8px); }
+    .custom-modal { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.4); backdrop-filter: blur(8px); }
     .modal-content { margin: auto; display: block; width: auto; max-width: 90%; max-height: 75vh; border-radius: 12px; position: relative; top: 50%; transform: translateY(-50%); animation: zoomIn 0.3s ease; }
     @keyframes zoomIn { from {transform: translateY(-50%) scale(0.8);} to {transform: translateY(-50%) scale(1);} }
     .close-modal { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 50px; cursor: pointer; }
