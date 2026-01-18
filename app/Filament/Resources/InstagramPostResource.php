@@ -34,7 +34,7 @@ class InstagramPostResource extends Resource
                             : $record->media_url;
                     })
                     ->square()       // daha şık görünüm
-                    ->size(100),
+                    ->size(50),
 
                 /* ===========================
                  * Açıklama
