@@ -43,7 +43,7 @@
                                 <a href="{{ Request::is('/') ? '#special' : url('/#special') }}"
                                     class="inner-link">Spesiyal</a>
                             </li>
-                            @if($galleries->count() > 0)
+                            @if(\App\Models\Gallery::count() > 0)
                             <li>
                                 <a href="{{ Request::is('/') ? '#gallery' : url('/#gallery') }}"
                                     class="inner-link">Galeri</a>
