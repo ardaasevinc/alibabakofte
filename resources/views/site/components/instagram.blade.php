@@ -86,7 +86,7 @@
         height: 350px;
         position: relative;
         overflow: hidden;
-        border-radius: 12px;
+        
     }
 
     .insta-card img {
