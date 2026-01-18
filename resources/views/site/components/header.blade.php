@@ -6,6 +6,7 @@
         </div>
         <div class="pt120 pb80 pt-xs-40 pb-xs-16">
             <div class="container">
+                @if($settings?->logo_dark)
                 <div class="row">
                     <div class="col-sm-12 text-center">
                         <a href="{{ route('site.index') }}">
@@ -13,6 +14,7 @@
                         </a>
                     </div>
                 </div>
+                @endif
                 <!--end of row-->
             </div>
             <!--end of container-->
