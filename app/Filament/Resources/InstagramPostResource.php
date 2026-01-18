@@ -49,7 +49,8 @@ class InstagramPostResource extends Resource
                  * Yayın Durumu Toggle
                  * =========================== */
                 Tables\Columns\ToggleColumn::make('is_published')
-                    ->label('Sitede Yayınla'),
+                    ->label('Sitede Yayınla')
+                    ->default(true),
 
                 /* ===========================
                  * Paylaşım Tarihi
