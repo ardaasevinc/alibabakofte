@@ -94,7 +94,7 @@ class InstagramPostResource extends Resource
                     ->modalSubmitAction(false)
                     ->modalCancelActionLabel('Kapat')
                     ->modalContent(function (InstagramPost $record) {
-                        return view('filament.instagram.video-player', [
+                        return view('site.filament.instagram.video-player', [
                             'videoUrl' => $record->media_url,
                         ]);
                     }),
