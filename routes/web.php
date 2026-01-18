@@ -13,6 +13,7 @@ use Spatie\Sitemap\SitemapGenerator;
 
 Route::get('/', [IndexController::class, 'index'])->name('site.index');
 Route::get('/blog', [BlogIndexController::class, 'index'])->name('site.blog.index');
+Route::get('/blog/{slug}', [BlogIndexController::class, 'detail'])->name('site.blog.detail');
 Route::get('/menu', [MenuIndexController::class, 'index'])->name('site.menu.index');
 
 Route::get('/kisisel-verilerin-korunmasi-kanunu', [PermissionIndexController::class, 'kvkk'])->name('site.permission.kvkk');

@@ -24,4 +24,19 @@ class IndexController extends Controller
             'blogCategories'
         ));
     }
+
+    public function detail($slug)
+    {
+        $blog = Blog::with('category')
+            ->where('slug', $slug)
+            ->where('is_published', 1)
+            ->firstOrFail();
+
+        $blogCategories = BlogCategory::where('is_published', 1)->get();
+
+        return view('site.blog.show', compact(
+            'blog',
+            'blogCategories'
+        ));
+    }
 }
