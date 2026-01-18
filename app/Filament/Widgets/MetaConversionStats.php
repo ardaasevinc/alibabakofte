@@ -14,12 +14,11 @@ class MetaConversionStats extends BaseWidget
 
     protected function getStats(): array
     {
-        // Zaman bazlı veriler
         $today = Carbon::today();
         $yesterday = Carbon::yesterday();
 
         return [
-            // 1. WhatsApp Dönüşümleri
+            
             Stat::make('WhatsApp İletişim', Lead::where('type', 'whatsapp')->whereDate('created_at', $today)->count())
                 ->description('Bugün gelen talepler')
                 ->descriptionIcon('heroicon-m-chat-bubble-left-right')
