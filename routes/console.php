@@ -36,3 +36,9 @@ Schedule::command('sitemap:generate')
 
 // Uygulama Önbelleğini Haftalık Temizleme (Opsiyonel - Sunucu sağlığı için)
 Schedule::command('cache:clear')->weekly();
+
+// Instagram Verilerini Çekme: Her akşam 21:00'de çalışır
+Schedule::command('instagram:fetch')
+    ->dailyAt('21:00')
+    ->onOneServer()
+    ->runInBackground();
