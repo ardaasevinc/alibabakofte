@@ -15,7 +15,7 @@ class IndexController extends Controller
         // Sadece onaylanmış olanları, en yeni en üstte olacak şekilde getir
         $instagramPosts = InstagramPost::where('is_published', 1)
             ->orderBy('posted_at', 'desc')
-            ->take(12) // Sayfa yapısına göre sayıyı değiştirebilirsin
+            ->take(6) // Sayfa yapısına göre sayıyı değiştirebilirsin
             ->get();
 
         return view('site.index', compact('instagramPosts'));
