@@ -30,7 +30,7 @@
                                 </div>
                             </div>
                         @endif
-                        <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
+                        <span class="mb24 mt24 text-center">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
 
                         {{-- Blog İçeriği --}}
                         <div class="row mb40 mb-xs-24">
@@ -38,13 +38,13 @@
                                 <div class="blog-excerpt">
                                     {{ Str::limit(strip_tags($blog->desc), 250, '...') }}
                                 </div>
-                                 
+
                                 <a class="btn btn-sm mt24" href="{{ route('site.blog.detail', $blog->slug) }}">Devamını Oku</a>
                             </div>
                         </div>
                     </div>
                 </section>
-                
+
             @endforeach
 
             {{-- Sadece Rakam ve İkonlardan Oluşan Sade Pagination --}}
