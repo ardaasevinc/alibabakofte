@@ -47,7 +47,7 @@
             @endforeach
 
             {{-- Sadece Rakam ve İkonlardan Oluşan Sade Pagination --}}
-            <div style="text-align: center; padding: 40px 0; width: 100%; clear: both;">
+            <div style="text-align: center; ">
                 <div style="display: inline-block;">
 
                     {{-- Önceki Sayfa İkonu --}}
