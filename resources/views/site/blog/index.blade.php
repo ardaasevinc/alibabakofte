@@ -25,61 +25,60 @@
                             <div class="row mb40 mb-xs-24">
                                 <div class="col-sm-10 col-sm-offset-1 text-center">
                                     <a href="{{ route('site.blog.detail', $blog->slug) }}">
-                                        <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive"
-                                            style="display:inline-block; height:600px; object-fit: cover;" />
-                                        </a>
-                                        </div>
-                                        </div>
+                                        <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}"
+                                            class="img-responsive" style="display:inline-block; height:600px; object-fit: cover;" />
+                                    </a>
+                                </div>
+                            </div>
                         @endif
 
-                                    {{-- Blog İçeriği --}}
-                                    <div class="row mb40 mb-xs-24">
-                                        <div class="col-sm-8 col-sm-offset-2 text-center">
-                                            <div class="blog-excerpt">
-                                                {{ Str::limit(strip_tags($blog->desc), 250, '...') }}
-                                            </div>
-                                            <a class="btn btn-sm mt24" href="{{ route('site.blog.detail', $blog->slug) }}">Devamını Oku</a>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    </section>
-                                    <hr style="margin: 64px 0 0 0; border-color: #eee;">
+                        {{-- Blog İçeriği --}}
+                        <div class="row mb40 mb-xs-24">
+                            <div class="col-sm-8 col-sm-offset-2 text-center">
+                                <div class="blog-excerpt">
+                                    {{ Str::limit(strip_tags($blog->desc), 250, '...') }}
+                                </div>
+                                <a class="btn btn-sm mt24" href="{{ route('site.blog.detail', $blog->slug) }}">Devamını Oku</a>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                <hr style="margin: 64px 0 0 0; border-color: #eee;">
             @endforeach
 
-                                    {{-- Temaya Uygun Kare Pagination --}}
-                                    <div style="text-align: center; padding: 60px 0; width: 100%; clear: both;">
-                                        <div style="display: inline-flex; border: 1px solid #ddd; border-radius: 2px; background: #fff; overflow: hidden;">
+            {{-- Sadece Rakam ve İkonlardan Oluşan Sade Pagination --}}
+            <div style="text-align: center; padding: 40px 0; width: 100%; clear: both;">
+                <div style="display: inline-block;">
 
-                                            {{-- Önceki Butonu --}}
-                                            @if ($latestBlogs->onFirstPage())
-                                                <span
-                                                    style="padding: 12px 18px; color: #ccc; border-right: 1px solid #ddd; cursor: not-allowed;">&lsaquo;</span>
-                                            @else
-                                                <a href="{{ $latestBlogs->previousPageUrl() }}"
-                                                    style="padding: 12px 18px; color: #333; text-decoration: none; border-right: 1px solid #ddd; transition: 0.3s;">&lsaquo;</a>
-                                            @endif
+                    {{-- Önceki Sayfa İkonu --}}
+                    @if ($latestBlogs->onFirstPage())
+                        <span style="padding: 0 10px; color: #ccc; cursor: not-allowed; font-size: 18px;">&lsaquo;</span>
+                    @else
+                        <a href="{{ $latestBlogs->previousPageUrl() }}"
+                            style="padding: 0 10px; color: #333; text-decoration: none; font-size: 18px;">&lsaquo;</a>
+                    @endif
 
-                                            {{-- Sayfa Numaraları --}}
-                                            @foreach ($latestBlogs->getUrlRange(1, $latestBlogs->lastPage()) as $page => $url)
-                                                @if ($page == $latestBlogs->currentPage())
-                                                    <span
-                                                        style="padding: 12px 18px; background-color: #5584b4; color: #fff; border-right: 1px solid #ddd; font-weight: bold; min-width: 45px; display: inline-block;">{{ $page }}</span>
-                                                @else
-                                                    <a href="{{ $url }}"
-                                                        style="padding: 12px 18px; color: #333; text-decoration: none; border-right: 1px solid #ddd; transition: 0.3s; min-width: 45px; display: inline-block;">{{ $page }}</a>
-                                                @endif
-                                            @endforeach
+                    {{-- Sayfa Numaraları --}}
+                    @foreach ($latestBlogs->getUrlRange(1, $latestBlogs->lastPage()) as $page => $url)
+                        @if ($page == $latestBlogs->currentPage())
+                            {{-- Seçili Sayfa: Kırmızı ve Temiz --}}
+                            <span style="padding: 0 10px; color: red; font-weight: bold; font-size: 18px;">{{ $page }}</span>
+                        @else
+                            <a href="{{ $url }}"
+                                style="padding: 0 10px; color: #333; text-decoration: none; font-size: 18px;">{{ $page }}</a>
+                        @endif
+                    @endforeach
 
-                                            {{-- Sonraki Butonu --}}
-                                            @if ($latestBlogs->hasMorePages())
-                                                <a href="{{ $latestBlogs->nextPageUrl() }}"
-                                                    style="padding: 12px 18px; color: #333; text-decoration: none; transition: 0.3s;">&rsaquo;</a>
-                                            @else
-                                                <span style="padding: 12px 18px; color: #ccc; cursor: not-allowed;">&rsaquo;</span>
-                                            @endif
+                    {{-- Sonraki Sayfa İkonu --}}
+                    @if ($latestBlogs->hasMorePages())
+                        <a href="{{ $latestBlogs->nextPageUrl() }}"
+                            style="padding: 0 10px; color: #333; text-decoration: none; font-size: 18px;">&rsaquo;</a>
+                    @else
+                        <span style="padding: 0 10px; color: #ccc; cursor: not-allowed; font-size: 18px;">&rsaquo;</span>
+                    @endif
 
-                                        </div>
-                                    </div>
+                </div>
+            </div>
         </div>
     @endif
 @endsection
