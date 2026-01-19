@@ -1,73 +1,5 @@
 @extends('site.layouts.site')
 
-@section('css')
-    <style>
-        /* Pagination Container */
-        .custom-pagination-area {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0;
-            /* Kutular arası boşluğu sıfırlayıp border'ları birleştiriyoruz */
-            margin: 40px 0;
-            font-family: 'alt-font', sans-serif;
-        }
-
-        .custom-pagination-area ul {
-            display: flex;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            border: 1px solid #e0e0e0;
-            /* Dış çerçeve */
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .custom-pagination-area li {
-            border-right: 1px solid #e0e0e0;
-        }
-
-        .custom-pagination-area li:last-child {
-            border-right: none;
-        }
-
-        .custom-pagination-area li a,
-        .custom-pagination-area li span {
-            display: block;
-            padding: 12px 20px;
-            min-width: 45px;
-            text-align: center;
-            color: #333;
-            text-decoration: none;
-            background: #fff;
-            font-size: 16px;
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-
-        /* Aktif Sayfa (Görseldeki Mavi Renk) */
-        .custom-pagination-area li.active span {
-            background-color: #5584b4 !important;
-            /* Görseldeki mavi tonu */
-            color: #fff !important;
-            cursor: default;
-        }
-
-        /* Hover Durumu */
-        .custom-pagination-area li a:hover {
-            background-color: #f9f9f9;
-            color: #5584b4;
-        }
-
-        /* Devre Dışı (Oklar) */
-        .custom-pagination-area li.disabled span {
-            color: #ccc;
-            cursor: not-allowed;
-        }
-    </style>
-@endsection
-
 @section('content')
     @if($latestBlogs && $latestBlogs->count() > 0)
         <div class="main-container">
@@ -112,32 +44,40 @@
                 <hr style="margin: 64px 0 0 0; border-color: #eee;">
             @endforeach
 
-            {{-- Yeni ve Sorunsuz Pagination Alanı --}}
-            <div class="custom-pagination-area">
-                <ul>
+            {{-- Tamamen İzole Edilmiş Pagination --}}
+            <div style="text-align: center; padding: 60px 0; clear: both; width: 100%;">
+                <div
+                    style="display: inline-block; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; background: #fff;">
+
                     {{-- Önceki Sayfa --}}
                     @if ($latestBlogs->onFirstPage())
-                        <li class="disabled"><span>&lsaquo;</span></li>
+                        <span
+                            style="display: inline-block; padding: 12px 18px; color: #ccc; border-right: 1px solid #ddd;">&lsaquo;</span>
                     @else
-                        <li><a href="{{ $latestBlogs->previousPageUrl() }}">&lsaquo;</a></li>
+                        <a href="{{ $latestBlogs->previousPageUrl() }}"
+                            style="display: inline-block; padding: 12px 18px; color: #333; text-decoration: none; border-right: 1px solid #ddd; background: #fff;">&lsaquo;</a>
                     @endif
 
-                    {{-- Sayfalar --}}
+                    {{-- Sayfa Numaraları --}}
                     @foreach ($latestBlogs->getUrlRange(1, $latestBlogs->lastPage()) as $page => $url)
                         @if ($page == $latestBlogs->currentPage())
-                            <li class="active"><span>{{ $page }}</span></li>
+                            <span
+                                style="display: inline-block; padding: 12px 18px; background-color: #5584b4; color: #fff; border-right: 1px solid #ddd; font-weight: bold;">{{ $page }}</span>
                         @else
-                            <li><a href="{{ $url }}">{{ $page }}</a></li>
+                            <a href="{{ $url }}"
+                                style="display: inline-block; padding: 12px 18px; color: #333; text-decoration: none; border-right: 1px solid #ddd; background: #fff;">{{ $page }}</a>
                         @endif
                     @endforeach
 
                     {{-- Sonraki Sayfa --}}
                     @if ($latestBlogs->hasMorePages())
-                        <li><a href="{{ $latestBlogs->nextPageUrl() }}">&rsaquo;</a></li>
+                        <a href="{{ $latestBlogs->nextPageUrl() }}"
+                            style="display: inline-block; padding: 12px 18px; color: #333; text-decoration: none; background: #fff;">&rsaquo;</a>
                     @else
-                        <li class="disabled"><span>&rsaquo;</span></li>
+                        <span style="display: inline-block; padding: 12px 18px; color: #ccc;">&rsaquo;</span>
                     @endif
-                </ul>
+
+                </div>
             </div>
         </div>
     @endif
