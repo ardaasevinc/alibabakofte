@@ -23,7 +23,7 @@
                         
 
                         @if($special->desc)
-                            <div class="mb0">
+                            <div class=" text-left text-md-center">
                                 {!! $special->desc !!}
                             </div>
                         @endif
