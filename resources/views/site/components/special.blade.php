@@ -13,13 +13,13 @@
                 </div>
                 @if($special->image)
                     <div class="row mb32 mb-xs-24">
-                        <div class="col-md-8 col-md-offset-2 col-sm-10 col-sm-offset-1">
+                        <div class="col-md-8  col-sm-10 col-sm-offset-1">
                             <img alt="{{ $special->title }}" src="{{ asset('uploads/' . $special->image) }}" />
                         </div>
                     </div>
                 @endif
                 <div class="row">
-                    <div class="col-md-7 col-md-offset-3 col-sm-8 col-sm-offset-2">
+                    <div class="col-md-7 col-sm-8 col-sm-offset-2">
                         
 
                         @if($special->desc)
