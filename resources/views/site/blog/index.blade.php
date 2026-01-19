@@ -12,7 +12,6 @@
                                     <h6 class="uppercase mb0">
                                         {{ $blog->category?->title }}
                                     </h6>
-                                    <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
                                 </div>
                                 <a href="{{ route('site.blog.detail', $blog->slug) }}">
                                     <h2 class="alt-font mb16">{{ $blog->title }}</h2>
@@ -31,6 +30,7 @@
                                 </div>
                             </div>
                         @endif
+                        <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
 
                         {{-- Blog İçeriği --}}
                         <div class="row mb40 mb-xs-24">
@@ -38,6 +38,7 @@
                                 <div class="blog-excerpt">
                                     {{ Str::limit(strip_tags($blog->desc), 250, '...') }}
                                 </div>
+                                 
                                 <a class="btn btn-sm mt24" href="{{ route('site.blog.detail', $blog->slug) }}">Devamını Oku</a>
                             </div>
                         </div>
