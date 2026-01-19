@@ -1,61 +1,85 @@
 @extends('site.layouts.site')
 
 @section('content')
-@if($latestBlogs && $latestBlogs->count() > 0)
-    <div class="main-container">
-        @foreach($latestBlogs as $blog)
-            <section class="pb0">
-                <div class="container">
-                    <div class="row mb40 mb-xs-24">
-                        <div class="col-sm-12 text-center">
-                            <div class="ribbon mb24">
-                                <h6 class="uppercase mb0">
-                                    {{ $blog->category?->title }}
-                                </h6>
-                                <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
+    @if($latestBlogs && $latestBlogs->count() > 0)
+        <div class="main-container">
+            @foreach($latestBlogs as $blog)
+                <section class="pb0">
+                    <div class="container">
+                        <div class="row mb40 mb-xs-24">
+                            <div class="col-sm-12 text-center">
+                                <div class="ribbon mb24">
+                                    <h6 class="uppercase mb0">
+                                        {{ $blog->category?->title }}
+                                    </h6>
+                                    <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
+                                </div>
+                                <a href="{{ route('site.blog.detail', $blog->slug) }}">
+                                    <h2 class="alt-font mb16">{{ $blog->title }}</h2>
+                                </a>
                             </div>
-                            <a href="{{ route('site.blog.detail', $blog->slug) }}">
-                                <h2 class="alt-font mb16">{{ $blog->title }}</h2>
-                            </a>
                         </div>
-                    </div>
 
-                    {{-- Blog Görseli --}}
-                    @if($blog->image)
-                    <div class="row mb40 mb-xs-24">
-                        <div class="col-sm-10 col-sm-offset-1 text-center">
-                            <a href="{{ route('site.blog.detail', $blog->slug) }}">
-                                <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive" style="display:inline-block; height:600px;" />
-                            </a>
-                        </div>
-                    </div>
-                    @endif
+                        {{-- Blog Görseli --}}
+                        @if($blog->image)
+                            <div class="row mb40 mb-xs-24">
+                                <div class="col-sm-10 col-sm-offset-1 text-center">
+                                    <a href="{{ route('site.blog.detail', $blog->slug) }}">
+                                        <img alt="{{ $blog->title }}" src="{{ asset('uploads/' . $blog->image) }}" class="img-responsive"
+                                            style="display:inline-block; height:600px; object-fit: cover;" />
+                                        </a>
+                                        </div>
+                                        </div>
+                        @endif
 
-                    {{-- Blog İçeriği (Str::limit ile kısıtlanmış) --}}
-                    <div class="row mb40 mb-xs-24">
-                        <div class="col-sm-8 col-sm-offset-2 text-center">
-                            <div class="blog-excerpt">
-                                {{-- HTML etiketlerini temizleyip 250 karakter ile sınırlıyoruz --}}
-                                {{ Str::limit(strip_tags($blog->desc), 250, '...') }}
-                            </div>
-                            <a class="btn btn-sm mt24" href="{{ route('site.blog.detail', $blog->slug) }}">Devamını Oku</a>
-                        </div>
-                    </div>
-                </div>
-            </section>
-            <hr style="margin: 64px 0 0 0; border-color: #eee;">
-        @endforeach
+                                    {{-- Blog İçeriği --}}
+                                    <div class="row mb40 mb-xs-24">
+                                        <div class="col-sm-8 col-sm-offset-2 text-center">
+                                            <div class="blog-excerpt">
+                                                {{ Str::limit(strip_tags($blog->desc), 250, '...') }}
+                                            </div>
+                                            <a class="btn btn-sm mt24" href="{{ route('site.blog.detail', $blog->slug) }}">Devamını Oku</a>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    </section>
+                                    <hr style="margin: 64px 0 0 0; border-color: #eee;">
+            @endforeach
 
-        {{-- Pagination Alanı --}}
-        <section class="pt64 pb64">
-            <div class="container">
-                <div class="row">
-                    <div class="col-sm-12 text-center">
-                        {{ $latestBlogs->links() }}
-                    </div>
-                </div>
-            </div>
-        </section>
-    </div>
-@endif
+                                    {{-- Temaya Uygun Kare Pagination --}}
+                                    <div style="text-align: center; padding: 60px 0; width: 100%; clear: both;">
+                                        <div style="display: inline-flex; border: 1px solid #ddd; border-radius: 2px; background: #fff; overflow: hidden;">
+
+                                            {{-- Önceki Butonu --}}
+                                            @if ($latestBlogs->onFirstPage())
+                                                <span
+                                                    style="padding: 12px 18px; color: #ccc; border-right: 1px solid #ddd; cursor: not-allowed;">&lsaquo;</span>
+                                            @else
+                                                <a href="{{ $latestBlogs->previousPageUrl() }}"
+                                                    style="padding: 12px 18px; color: #333; text-decoration: none; border-right: 1px solid #ddd; transition: 0.3s;">&lsaquo;</a>
+                                            @endif
+
+                                            {{-- Sayfa Numaraları --}}
+                                            @foreach ($latestBlogs->getUrlRange(1, $latestBlogs->lastPage()) as $page => $url)
+                                                @if ($page == $latestBlogs->currentPage())
+                                                    <span
+                                                        style="padding: 12px 18px; background-color: #5584b4; color: #fff; border-right: 1px solid #ddd; font-weight: bold; min-width: 45px; display: inline-block;">{{ $page }}</span>
+                                                @else
+                                                    <a href="{{ $url }}"
+                                                        style="padding: 12px 18px; color: #333; text-decoration: none; border-right: 1px solid #ddd; transition: 0.3s; min-width: 45px; display: inline-block;">{{ $page }}</a>
+                                                @endif
+                                            @endforeach
+
+                                            {{-- Sonraki Butonu --}}
+                                            @if ($latestBlogs->hasMorePages())
+                                                <a href="{{ $latestBlogs->nextPageUrl() }}"
+                                                    style="padding: 12px 18px; color: #333; text-decoration: none; transition: 0.3s;">&rsaquo;</a>
+                                            @else
+                                                <span style="padding: 12px 18px; color: #ccc; cursor: not-allowed;">&rsaquo;</span>
+                                            @endif
+
+                                        </div>
+                                    </div>
+        </div>
+    @endif
 @endsection
