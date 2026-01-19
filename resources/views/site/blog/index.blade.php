@@ -43,7 +43,7 @@
                         </div>
                     </div>
                 </section>
-                <hr style="margin: 64px 0 0 0; border-color: #eee;">
+                <hr style="margin: 64px 0 0 0;">
             @endforeach
 
             {{-- Sadece Rakam ve İkonlardan Oluşan Sade Pagination --}}
