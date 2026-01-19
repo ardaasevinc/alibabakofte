@@ -30,7 +30,9 @@
                                 </div>
                             </div>
                         @endif
-                        <span class="mb24 mt24 text-center">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
+                        <span class="mb24 mt24 text-center" style="display: block; width: 100%;">
+    {{ $blog->created_at->translatedFormat('d F Y') }}
+</span>
 
                         {{-- Blog İçeriği --}}
                         <div class="row mb40 mb-xs-24">
