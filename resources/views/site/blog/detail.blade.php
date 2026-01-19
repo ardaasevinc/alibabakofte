@@ -15,7 +15,9 @@
                         </h6>
                         <span class="mb24">{{ $blog->created_at->translatedFormat('d F Y') }}</span>
                     </div>
-                    <h1 class="alt-font">{{ $blog->title }}</h1>
+                  
+                                    <h2 class="alt-font mb16">{{ $blog->title }}</h2>
+                             
                 </div>
             </div>
 
