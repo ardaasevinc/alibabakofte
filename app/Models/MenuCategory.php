@@ -3,10 +3,13 @@
 
 namespace App\Models;
 
+use App\PhotoDelete\HasImageDeleting;
 use Illuminate\Database\Eloquent\Model;
 
 class MenuCategory extends Model
 {
+
+    use HasImageDeleting;
     protected $fillable = ['title', 'desc', 'image', 'order', 'is_published'];
 
     protected $casts = [
@@ -19,4 +22,6 @@ class MenuCategory extends Model
     {
         return $this->hasMany(MenuItem::class);
     }
+
+     protected array $imageFields = ['image'];
 }

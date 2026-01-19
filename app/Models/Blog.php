@@ -3,11 +3,14 @@
 
 namespace App\Models;
 
+use App\PhotoDelete\HasImageDeleting;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Blog extends Model
 {
+
+use HasImageDeleting;
     protected $fillable = [
         'blog_category_id', 'title', 'slug', 'desc', 'image', 'is_published', 'tags'
     ];
@@ -22,4 +25,6 @@ class Blog extends Model
     {
         return $this->belongsTo(BlogCategory::class, 'blog_category_id');
     }
+
+     protected array $imageFields = ['image'];
 }

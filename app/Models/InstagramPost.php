@@ -21,4 +21,6 @@ protected $casts = [
     'posted_at' => 'datetime',
     'is_published' => 'boolean',
 ];
+
+
 }

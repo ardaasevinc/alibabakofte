@@ -5,9 +5,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
+use App\PhotoDelete\HasImageDeleting;
 
 class BlogCategory extends Model
 {
+
+use HasImageDeleting;
     protected $fillable = ['title', 'slug', 'desc', 'image', 'is_published'];
 
     protected $casts = [
@@ -19,4 +22,6 @@ class BlogCategory extends Model
     {
         return $this->hasMany(Blog::class);
     }
+
+     protected array $imageFields = ['image'];
 }

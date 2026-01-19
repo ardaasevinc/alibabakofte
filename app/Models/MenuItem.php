@@ -5,9 +5,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
+use App\PhotoDelete\HasImageDeleting;
 class MenuItem extends Model
 {
+
+use HasImageDeleting;
     protected $fillable = [
         'menu_category_id', 'title', 'desc', 'price', 'image', 'order', 'is_published'
     ];
@@ -22,4 +24,6 @@ class MenuItem extends Model
     {
         return $this->belongsTo(MenuCategory::class, 'menu_category_id');
     }
+
+     protected array $imageFields = ['image'];
 }
