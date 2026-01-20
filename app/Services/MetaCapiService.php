@@ -45,6 +45,7 @@ class MetaCapiService
                         'external_id'       => hash('sha256', Session::getId()),
                         'subscription_id'   => hash('sha256', self::getOrCreateDeviceId()),
                         'browser_id'        => Cookie::get('browser_id'),
+                        'country'           => 'tr',
                     ]),
 
                     'custom_data' => $customData,
