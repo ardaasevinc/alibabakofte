@@ -11,48 +11,49 @@ use Illuminate\Support\Str;
 
 class MetaCapiService
 {
-    /**
-     * Meta Event Gönderimi
-     */
     public static function sendEvent(string $eventName, array $customData = [], ?string $eventId = null): void
     {
         $pixelId     = config('services.meta.pixel_id');
         $accessToken = config('services.meta.access_token');
-        
 
         if (! $pixelId || ! $accessToken) {
             Log::warning('Meta CAPI: Pixel ID veya Access Token tanımlı değil.');
             return;
         }
 
+        // Trafik verilerini bir kere yakala (utm, fbclid, fbp vs.)
         self::captureTrafficDataOnce();
 
         $eventId ??= self::generateEventId();
 
+        $event = [
+            'event_name'       => $eventName,
+            'event_time'       => now()->timestamp,
+            'event_id'         => $eventId,
+            'action_source'    => 'website',
+            'event_source_url' => Request::fullUrl(),
+
+            'user_data' => array_filter([
+                'client_ip_address' => Request::ip(),
+                'client_user_agent' => Request::userAgent(),
+                'fbp'               => self::getOrCreateFbp(),
+                'fbc'               => self::getFormattedFbc(),
+                'external_id'       => hash('sha256', Session::getId()),
+                'subscription_id'   => hash('sha256', self::getOrCreateDeviceId()),
+                'browser_id'        => Cookie::get('browser_id'),
+                'country'           => 'tr',
+            ]),
+
+            'custom_data' => $customData,
+        ];
+
+        // Test modu açıksa test_event_code ekle
+        if ($testCode = config('services.meta.test_code')) {
+            $event['test_event_code'] = $testCode;
+        }
+
         $payload = [
-            'data' => [
-                [
-                    'event_name'       => $eventName,
-                    'event_time'       => now()->timestamp,
-                    'event_id'         => $eventId,
-                    'action_source'    => 'website',
-                    'event_source_url' => Request::headers()->get('referer') ?? Request::fullUrl(),
-                   
-
-                    'user_data' => array_filter([
-                        'client_ip_address' => Request::ip(),
-                        'client_user_agent' => Request::userAgent(),
-                        'fbp'               => self::getOrCreateFbp(),
-                        'fbc'               => self::getFormattedFbc(),
-                        'external_id'       => hash('sha256', Session::getId()),
-                        'subscription_id'   => hash('sha256', self::getOrCreateDeviceId()),
-                        'browser_id'        => Cookie::get('browser_id'),
-                        'country'           => 'tr',
-                    ]),
-
-                    'custom_data' => $customData,
-                ],
-            ],
+            'data' => [ $event ],
         ];
 
         Http::async()
@@ -63,34 +64,29 @@ class MetaCapiService
             });
     }
 
-    /**
-     * Benzersiz Event ID
-     */
     public static function generateEventId(): string
     {
         return 'evt_' . Str::random(12) . '_' . now()->timestamp;
     }
 
-    /**
-     * Benzersiz Device ID (cookie tabanlı)
-     */
     public static function getOrCreateDeviceId(): string
     {
         $cookie = Cookie::get('device_id');
 
         if (! $cookie) {
             $id = Str::uuid()->toString();
-            // 1 yıl
-            Cookie::queue('device_id', $id, 60 * 24 * 365);
+            Cookie::queue('device_id', $id, 60 * 24 * 365); // 1 yıl
             return $id;
         }
 
         return $cookie;
     }
 
-    /**
-     * FBP oluşturma
-     */
+    public static function getSessionHash(): string
+    {
+        return hash('sha256', Session::getId());
+    }
+
     public static function getOrCreateFbp(): string
     {
         $cookie = Cookie::get('_fbp');
@@ -105,18 +101,12 @@ class MetaCapiService
         return $cookie;
     }
 
-    /**
-     * FBC formatı
-     */
     public static function getFormattedFbc(): ?string
     {
         $fbclid = Request::query('fbclid') ?? Session::get('meta_fbclid');
         return $fbclid ? 'fb.1.' . now()->timestamp . '.' . $fbclid : null;
     }
 
-    /**
-     * UTM + FBCLID + FBP sadece ilk girişte yazılır
-     */
     private static function captureTrafficDataOnce(): void
     {
         if (Request::has('fbclid') && ! Session::has('meta_fbclid')) {

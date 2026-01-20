@@ -11,7 +11,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+
+       // Landing Katmanı
+    $middleware->append(\App\Http\Middleware\CaptureLandingMiddleware::class);
+
+    // PageView Katmanı (Lead ve Landing'den sonra çalışır)
+    $middleware->append(\App\Http\Middleware\PageViewMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

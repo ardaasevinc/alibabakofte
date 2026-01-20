@@ -34,16 +34,13 @@ class IndexController extends Controller
     {
         $userAgent = request()->userAgent();
 
-        /**
-         * 1) BOT / SERVER-SIDE İSTEKLERİ ELE
-         * - GuzzleHttp (backend HTTP client)
-         * - User-Agent içinde hiç tarayıcı izi olmayan istekler
-         *
-         * Bunlar için LEAD OLUŞTURMA, CAPI GÖNDERME.
-         */
+        // 1) BOT / SERVER-SIDE (Guzzle, curl, bot vs.) İSTEKLERİ ELE
         if (
-            str_contains($userAgent, 'GuzzleHttp')
-            || (! str_contains($userAgent, 'Mozilla/') && ! str_contains($userAgent, 'Chrome/') && ! str_contains($userAgent, 'Safari/'))
+            ! $userAgent ||
+            str_contains($userAgent, 'GuzzleHttp') ||
+            str_contains($userAgent, 'curl') ||
+            str_contains(strtolower($userAgent), 'bot') ||
+            str_contains(strtolower($userAgent), 'spider')
         ) {
             return redirect()->to($targetUrl);
         }
@@ -52,38 +49,30 @@ class IndexController extends Controller
         $type = $buttonId === 'meta-whatsapp' ? 'whatsapp' : 'menu';
 
         // Device & session tracking
-        $sessionId   = session()->getId();
-        $sessionHash = hash('sha256', $sessionId);
+        $sessionHash = MetaCapiService::getSessionHash();
+        $rawDeviceId = MetaCapiService::getOrCreateDeviceId();
+        $deviceId    = hash('sha256', $rawDeviceId);
+        $fbp         = MetaCapiService::getOrCreateFbp();
+        $fbc         = MetaCapiService::getFormattedFbc();
+        $browserId   = Cookie::get('browser_id');
 
-        $rawDeviceId = MetaCapiService::getOrCreateDeviceId(); // cookie tabanlı UUID
-        $deviceId    = hash('sha256', $rawDeviceId);           // DB & CAPI için hash
-
-        $fbp       = MetaCapiService::getOrCreateFbp();
-        $fbc       = MetaCapiService::getFormattedFbc();
-        $browserId = Cookie::get('browser_id'); // JS ile atanıyor
-
-        // URL kaynakları
+        // Kaynak URL
         $previousUrl = request()->headers->get('referer') ?? url()->previous() ?? url('/');
         $referer     = request()->headers->get('referer');
         $urlData     = parse_url($previousUrl);
         parse_str($urlData['query'] ?? '', $qs);
 
-        /**
-         * 2) 24 SAAT İÇİNDE AYNI CİHAZ + AYNI TYPE İÇİN TEK LEAD
-         *
-         * device_id + type + 24h
-         */
+        // 2) 24 SAAT İÇİNDE AYNI CİHAZ + AYNI TYPE İÇİN TEK LEAD
         $exists = Lead::where('type', $type)
             ->where('device_id', $deviceId)
             ->where('created_at', '>', now()->subHours(24))
             ->exists();
 
         if ($exists) {
-            // ZATEN LEAD VAR → NE DB NE CAPI
+            // Zaten lead varsa: ne DB ne CAPI
             return redirect()->to($targetUrl);
         }
 
-        // 3) YENİ LEAD OLUŞTUR
         try {
             $eventId = MetaCapiService::generateEventId();
 
@@ -92,34 +81,30 @@ class IndexController extends Controller
                 'event_id'      => $eventId,
                 'event_name'    => 'Lead',
 
-                // Traffic / UTM
                 'utm_source'    => $qs['utm_source'] ?? session('utm_source'),
                 'utm_campaign'  => $qs['utm_campaign'] ?? session('utm_campaign'),
                 'utm_medium'    => $qs['utm_medium'] ?? session('utm_medium'),
                 'fbclid'        => $qs['fbclid'] ?? session('meta_fbclid'),
                 'gclid'         => $qs['gclid'] ?? null,
 
-                // Matching data
                 'device_id'     => $deviceId,
                 'session_hash'  => $sessionHash,
                 'fbp'           => $fbp,
                 'fbc'           => $fbc,
                 'browser_id'    => $browserId,
 
-                // Client info
                 'ip_address'    => $ip,
                 'user_agent'    => $userAgent,
                 'referer'       => $referer,
                 'landing_page'  => $previousUrl,
 
-                // Ek veriler
                 'payload' => [
-                    'button'        => $buttonId,    // meta-whatsapp / meta-menu
-                    'raw_device_id' => $rawDeviceId, // hash'lenmemiş cihaz ID
+                    'button'        => $buttonId,
+                    'raw_device_id' => $rawDeviceId,
                 ],
             ]);
 
-            // 4) META CAPI EVENT (Sadece yeni lead varsa)
+            // CAPI EVENT (2. Katman - Lead)
             MetaCapiService::sendEvent('Lead', [
                 'lead_id' => $lead->id,
                 'type'    => $type,
