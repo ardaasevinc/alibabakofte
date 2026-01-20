@@ -36,15 +36,17 @@ return [
     ],
 
     'instagram' => [
-    'verify_token' => env('INSTAGRAM_VERIFY_TOKEN'),
-    'app_id' => env('INSTAGRAM_APP_ID'),
-    'app_secret' => env('INSTAGRAM_APP_SECRET'),
-    'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
-],
+        'verify_token' => env('INSTAGRAM_VERIFY_TOKEN'),
+        'app_id' => env('INSTAGRAM_APP_ID'),
+        'app_secret' => env('INSTAGRAM_APP_SECRET'),
+        'access_token' => env('INSTAGRAM_ACCESS_TOKEN'),
+    ],
 
-'meta' => [
-    'pixel_id' => env('FACEBOOK_PIXEL_ID'),
-    'access_token' => env('FACEBOOK_ACCESS_TOKEN'),
-],
+    
+    'meta' => [
+        'pixel_id' => env('FACEBOOK_PIXEL_ID'),
+        'access_token' => env('FACEBOOK_ACCESS_TOKEN'),
+        'test_code' => env('FACEBOOK_TEST_CODE'),
+    ],
 
 ];

@@ -3,96 +3,74 @@
 namespace App\Http\Controllers\Site\Lead;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use App\Models\Lead;
 use App\Services\MetaCapiService;
-use Illuminate\Support\Facades\{Log, Cache, Session};
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class IndexController extends Controller
 {
-    public function whatsapp()
+    /**
+     * Direkt WhatsApp Butonu (Sipariş/İletişim)
+     */
+    public function whatsapp(Request $request)
     {
-        $phone = '905352855696';
+        $phone = '905352855696'; 
         return $this->processLead('meta-whatsapp', "https://wa.me/{$phone}");
     }
 
-    public function menu()
+    /**
+     * Menü Butonu
+     */
+    public function menu(Request $request)
     {
-        return $this->processLead('meta-menu', route('site.menu.index'));
+        return $this->processLead('meta-menu', route('site.menu'));
     }
 
-    private function processLead(string $buttonId, string $targetUrl)
+    /**
+     * Ortak Kayıt ve Yönlendirme Mantığı
+     */
+    private function processLead($buttonId, $targetUrl)
     {
-        $userAgent = request()->userAgent();
+        // 1. Meta Deduplication (Tekilleştirme) için benzersiz ID
+        $eventId = 'lead_' . bin2hex(random_bytes(4)) . '_' . time();
+        $previousUrl = url()->previous();
 
-        // 1. GÜVENLİK: Bot Engelleme
-        if ($this->isBot($userAgent)) {
-            return redirect()->to($targetUrl);
-        }
+        // 2. URL Parametrelerini Analiz Et
+        $urlComponents = parse_url($previousUrl);
+        parse_str($urlComponents['query'] ?? '', $urlQueries);
 
-        // 2. MÜKERRER KAYIT KORUMASI (Geliştirildi)
-        // Session Kilidi: Kullanıcı sayfayı yenilese bile aynı oturumda tekrar kayıt atmaz.
-        $sessionKey = 'processed_lead_' . $buttonId;
-        if (session()->has($sessionKey)) {
-            return redirect()->to($targetUrl);
-        }
-
-        // Cache Kilidi: Aynı IP'den gelen ardışık istekleri engeller (30 saniye).
-        $ipHash = md5(request()->ip() . $buttonId);
-        $lockKey = 'lead_lock_' . $ipHash;
-        if (Cache::has($lockKey)) {
-            return redirect()->to($targetUrl);
-        }
-
-        // --- VERİ HAZIRLAMA ---
-        MetaCapiService::captureTrafficData();
-        $eventId = 'ab_' . Str::random(8) . '_' . time();
+        $fbclid = $urlQueries['fbclid'] ?? session('fbclid') ?? request()->query('fbclid');
 
         try {
-            // 3. VERİTABANI KAYDI
+            // 3. Veritabanı Kaydı
             $lead = Lead::create([
-                'type'         => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu',
-                'event_id' => $eventId,
-                'utm_source'   => session('utm_source', MetaCapiService::getDetectedSource()), 
-                'utm_campaign' => session('utm_campaign', '-'),
-                'fbclid'       => session('meta_fbclid') ?? request()->cookie('_fbc'),
+                'type'         => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu', 
+                'event_id'     => $eventId,
+                'utm_source'   => $urlQueries['utm_source']   ?? session('utm_source') ?? 'direct',
+                'utm_campaign' => $urlQueries['utm_campaign'] ?? session('utm_campaign') ?? '-',
+                'fbclid'       => $fbclid,
                 'ip_address'   => request()->ip(),
-                'user_agent'   => $userAgent,
+                'user_agent'   => request()->userAgent(),
                 'payload'      => [
-                    'button_id' => $buttonId,
-                    'referer'   => request()->headers->get('referer'),
-                    'session_id'=> session()->getId()
+                    'came_from'  => $previousUrl,
+                    'button_id'  => $buttonId,
+                    'utm_medium' => $urlQueries['utm_medium'] ?? session('utm_medium') ?? 'reklam',
                 ],
             ]);
 
-            // 4. META CAPI GÖNDERİMİ
-            $customData = [
-                'content_name' => ($buttonId === 'meta-whatsapp') ? 'WhatsApp Lead' : 'Menu View',
-                'button_id'    => $buttonId,
-                'value'        => 0.00, 
-                'currency'     => 'TRY',
-            ];
-
-            MetaCapiService::sendEvent('Lead', $customData, $eventId);
-
-            // 5. KİLİTLERİ AKTİF ET
-            // Kullanıcı bu oturumda bu butona bastı olarak işaretle
-            session()->put($sessionKey, now());
-            // IP bazlı geçici kilit koy
-            Cache::put($lockKey, true, 30); 
+            // 4. Meta CAPI Gönderimi (Tazelenmiş Servis Çağrısı)
+            MetaCapiService::sendEvent('Lead', [
+                'external_id' => hash('sha256', (string) $lead->id),
+                'event_source_url' => $previousUrl,
+                // Eğer formda e-posta veya telefon alsaydık buraya hashleyip eklerdik
+            ], $eventId);
 
         } catch (\Exception $e) {
-            Log::error("Lead İşleme Hatası: " . $e->getMessage());
+            Log::error("Peçka Lead Kayıt Hatası: " . $e->getMessage());
         }
 
+        // 5. Yönlendirme
         return redirect()->to($targetUrl);
-    }
-
-    private function isBot($userAgent): bool
-    {
-        return request()->header('X-Purpose') == 'preview' || 
-               str_contains(strtolower($userAgent), 'facebookexternalhit') ||
-               str_contains(strtolower($userAgent), 'googlebot') ||
-               str_contains(strtolower($userAgent), 'twitterbot');
     }
 }
