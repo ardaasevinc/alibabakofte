@@ -2,69 +2,93 @@
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\{Http, Log, Session, Request};
 use Illuminate\Support\Str;
 
 class MetaCapiService
 {
-    public static function sendEvent(string $eventName, array $customData = [], ?string $eventId = null)
+    /**
+     * Meta Event Gönderimi (Asenkron)
+     */
+    public static function sendEvent(string $eventName, array $customData = [], ?string $eventId = null): void
     {
         $pixelId = config('services.meta.pixel_id');
         $accessToken = config('services.meta.access_token');
-        $apiVersion = 'v21.0';
 
-        // Tekilleştirme ID'si (Pixel tarafıyla aynı gönderilmeli)
-        $eventId = $eventId ?? (string) Str::uuid();
+        // Laravel 12 Fluent String kullanımı
+        $eventId ??= (string) Str::of('ab_')
+            ->append(Str::random(8))
+            ->append('_')
+            ->append(now()->timestamp);
+
+        // Trafik verilerini session'a sabitle (Eğer URL'de varsa)
+        self::captureTrafficData();
 
         $payload = [
             'data' => [
                 [
                     'event_name' => $eventName,
-                    'event_time' => time(),
+                    'event_time' => now()->timestamp,
                     'action_source' => 'website',
                     'event_id' => $eventId,
-                    'event_source_url' => request()->fullUrl(),
+                    'event_source_url' => Request::fullUrl(),
                     'user_data' => array_filter([
-                        // 1. Tarayıcı ve IP (Temel Eşleştirme)
-                        'client_ip_address' => request()->ip(),
-                        'client_user_agent' => request()->userAgent(),
-                        
-                        // 2. Çerez İzleyicileri (En Yüksek Puanı Bunlar Verir)
-                        'fbp' => request()->cookie('_fbp'), // Meta Browser ID
-                        'fbc' => request()->cookie('_fbc') ?? self::getFbcFromUrl(), // Meta Click ID
-                        
-                        // 3. Anonim Kimlik (External ID)
-                        // Form olmasa bile session_id'yi hashleyerek göndermek, 
-                        // Meta'nın bu oturumu bir "birey" olarak gruplamasını sağlar.
-                        'external_id' => hash('sha256', session()->getId()),
-                        
-                        // 4. Gelişmiş Tarayıcı Parametreleri
-                        // Eğer dilde/bölgede özelleştirme varsa:
-                        'country' => self::hashData(substr(request()->getLanguages()[0] ?? 'tr', -2)), 
+                        'client_ip_address' => Request::ip(),
+                        'client_user_agent' => Request::userAgent(),
+                        'fbp' => Request::cookie('_fbp') ?? Session::get('_fbp'),
+                        'fbc' => self::getFormattedFbc(),
+                        'external_id' => hash('sha256', Session::getId()),
                     ]),
                     'custom_data' => $customData,
                 ],
             ],
         ];
 
-        return Http::post("https://graph.facebook.com/{$apiVersion}/{$pixelId}/events?access_token={$accessToken}", $payload);
+        // Laravel 12 asenkron HTTP istemcisi (Redirect hızını etkilemez)
+        Http::async()
+            ->withToken($accessToken)
+            ->post("https://graph.facebook.com/v21.0/{$pixelId}/events", $payload)
+            ->otherwise(fn ($e) => Log::error("Meta CAPI Error: " . $e->getMessage()));
     }
 
     /**
-     * Meta Click ID (fbclid) URL'den yakalama
+     * Trafik Verilerini Session'da Kilitle
      */
-    private static function getFbcFromUrl(): ?string
+    public static function captureTrafficData(): void
     {
-        $fbclid = request()->query('fbclid');
-        if (!$fbclid) return null;
+        // URL'de fbclid varsa session'a yaz (Kalıcılık sağlar)
+        if (Request::has('fbclid')) {
+            Session::put('meta_fbclid', Request::query('fbclid'));
+        }
 
-        // Format: fb.1.creation_time.fbclid
-        return 'fb.1.' . time() . '.' . $fbclid;
+        // UTM verilerini session'da sakla
+        if (Request::has('utm_source')) {
+            Session::put('utm_source', Request::query('utm_source'));
+            Session::put('utm_campaign', Request::query('utm_campaign', 'tanimsiz'));
+        }
     }
 
-    private static function hashData($data): ?string
+    /**
+     * Veritabanı Kaydı İçin Kaynak Tespiti
+     */
+    public static function getDetectedSource(): string
     {
-        if (!$data) return null;
-        return hash('sha256', strtolower(trim((string)$data)));
+        if (Session::has('utm_source')) {
+            return (string) Session::get('utm_source');
+        }
+
+        return Session::has('meta_fbclid') ? 'facebook_ad' : 'direct';
+    }
+
+    /**
+     * FBC Parametresini Formatla
+     */
+    private static function getFormattedFbc(): ?string
+    {
+        $fbclid = Request::query('fbclid') ?? Session::get('meta_fbclid');
+        
+        return $fbclid 
+            ? "fb.1." . now()->timestamp . ".{$fbclid}" 
+            : null;
     }
 }

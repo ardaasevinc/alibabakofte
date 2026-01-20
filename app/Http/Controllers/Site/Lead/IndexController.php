@@ -67,7 +67,7 @@ class IndexController extends Controller
             ], $eventId);
 
         } catch (\Exception $e) {
-            Log::error("Peçka Lead Kayıt Hatası: " . $e->getMessage());
+            Log::error("alibaba Lead Kayıt Hatası: " . $e->getMessage());
         }
 
         // 5. Yönlendirme
