@@ -3,9 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\{File, Log, Cache};
 
 class Setting extends Model
 {
@@ -14,7 +12,7 @@ class Setting extends Model
     protected static function booted()
     {
         static::saved(function ($setting) {
-            // .env dosyasına yazılacak anahtar-değer eşleşmeleri
+            // .env mapping: Veritabanı sütun isimleri soldaki ENV anahtarlarına atanır
             $envMapping = [
                 'APP_URL'               => $setting->app_url,
                 'APP_ENV'               => $setting->app_env,
@@ -25,7 +23,7 @@ class Setting extends Model
                 'MAIL_PASSWORD'         => $setting->mail_password,
                 'MAIL_FROM_ADDRESS'     => $setting->mail_from_address,
                 'MAIL_FROM_NAME'        => $setting->mail_from_name,
-                // Meta ve Google ID'lerini de ENV'ye ekliyoruz (Script kodlarını değil, sadece ID'leri)
+                // Resource'daki TextInput(facebook_pixel_code) -> .env(FACEBOOK_PIXEL_ID)
                 'FACEBOOK_PIXEL_ID'     => $setting->facebook_pixel_code,
                 'FACEBOOK_ACCESS_TOKEN' => $setting->facebook_access_token,
                 'GOOGLE_ANALYTICS_ID'   => $setting->google_analytics_code,
@@ -37,28 +35,25 @@ class Setting extends Model
                     $content = File::get($envPath);
 
                     foreach ($envMapping as $key => $value) {
-                        // Değer null ise boş string olarak işle
                         $value = $value ?? '';
-                        
-                        // Değeri çift tırnak içine al ve içindeki tırnakları kaçır
+                        // Çift tırnak ve ters eğik çizgi kaçırma işlemi (addslashes güvenlidir)
                         $safeValue = '"' . addslashes($value) . '"';
                         
-                        // Mevcut anahtarı bulmak için Regex (Satır başı kontrolü ile)
                         $pattern = "/^{$key}=.*/m";
 
                         if (preg_match($pattern, $content)) {
                             $content = preg_replace($pattern, "{$key}={$safeValue}", $content);
                         } else {
-                            // Anahtar yoksa en sona ekle
                             $content .= "\n{$key}={$safeValue}";
                         }
                     }
 
-                    // Gereksiz boş satırları temizle ve dosyayı yaz
+                    // Gereksiz satır başlarını temizle ve dosyayı güncelle
                     File::put($envPath, trim($content) . "\n");
 
-                    // ÖNEMLİ: Forge/Hetzner üzerinde config cache varsa temizlenmesi gerekir
-                    // Ancak web isteği sırasında artisan command çalıştırmak yavaşlatabilir.
+                    // Önbelleği temizle (Yeni ayarların anında config() üzerinden okunması için)
+                    // Not: Forge deployment scriptlerinde genelde 'config:cache' olduğu için 
+                    // anlık yansıma adına Cache temizliği faydalı olabilir.
                 }
             } catch (\Exception $e) {
                 Log::error("Setting Model - ENV Yazım Hatası: " . $e->getMessage());
@@ -79,10 +74,11 @@ class Setting extends Model
             try {
                 $url = "https://graph.instagram.com/me/media?fields=id,caption,media_type,media_url,permalink,thumbnail_url,timestamp&access_token={$this->instagram_access_token}";
                 
-                // file_get_contents yerine daha modern bir yaklaşım (isteğe bağlı) veya hata kontrolü
+                // file_get_contents yerine daha güvenli hata kontrolü
                 $response = @file_get_contents($url);
                 
                 if ($response === false) {
+                    Log::warning("Instagram API - Veri çekilemedi. Token geçersiz olabilir.");
                     return [];
                 }
 

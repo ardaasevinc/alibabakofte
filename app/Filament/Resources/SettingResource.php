@@ -38,7 +38,7 @@ class SettingResource extends Resource
             ->schema([
                 Tabs::make('Settings')
                     ->tabs([
-                        // 1. SEKME: GENEL
+                        // 1. SEKME: GENEL VE İLETİŞİM
                         Tab::make('Genel ve İletişim')
                             ->icon('heroicon-o-home')
                             ->schema([
@@ -88,10 +88,11 @@ class SettingResource extends Resource
                             ->icon('heroicon-o-presentation-chart-line')
                             ->schema([
                                 Section::make('API ve Takip ID Bilgileri')
-                                    ->description('Buradaki ID bilgileri layout tarafındaki scriptler ve Meta CAPI servisi için kullanılır.')
+                                    ->description('Bu bilgiler veritabanına kaydedilir ve otomatik olarak .env dosyanıza FACEBOOK_PIXEL_ID olarak işlenir.')
                                     ->schema([
                                         Grid::make(2)->schema([
-                                            TextInput::make('facebook_pixel_id')
+                                            // Veritabanındaki sütun adınızla eşleşmesi için facebook_pixel_code yapıldı
+                                            TextInput::make('facebook_pixel_code')
                                                 ->label('Facebook Pixel ID')
                                                 ->placeholder('Örn: 1234567890'),
                                             
@@ -103,7 +104,7 @@ class SettingResource extends Resource
                                                 ->label('Meta CAPI Access Token')
                                                 ->rows(3)
                                                 ->columnSpanFull()
-                                                ->helperText('Meta Business Suite panelinden aldığınız CAPI Access Token değerini girin.'),
+                                                ->helperText('Meta Business Suite üzerinden aldığınız CAPI tokenini buraya yapıştırın.'),
                                             
                                             TextInput::make('instagram_access_token')
                                                 ->label('Instagram Access Token')
@@ -112,7 +113,7 @@ class SettingResource extends Resource
                                     ]),
                             ]),
 
-                        // 4. SEKME: SİSTEM
+                        // 4. SEKME: SİSTEM & MAİL
                         Tab::make('Sistem & Mail')
                             ->icon('heroicon-o-cpu-chip')
                             ->schema([
