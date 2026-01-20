@@ -30,7 +30,14 @@ class IndexController extends Controller
             return redirect()->to($targetUrl);
         }
 
-        // 2. MÜKERRER TIKLAMA KORUMASI
+        // 2. MÜKERRER KAYIT KORUMASI (Geliştirildi)
+        // Session Kilidi: Kullanıcı sayfayı yenilese bile aynı oturumda tekrar kayıt atmaz.
+        $sessionKey = 'processed_lead_' . $buttonId;
+        if (session()->has($sessionKey)) {
+            return redirect()->to($targetUrl);
+        }
+
+        // Cache Kilidi: Aynı IP'den gelen ardışık istekleri engeller (30 saniye).
         $ipHash = md5(request()->ip() . $buttonId);
         $lockKey = 'lead_lock_' . $ipHash;
         if (Cache::has($lockKey)) {
@@ -38,17 +45,14 @@ class IndexController extends Controller
         }
 
         // --- VERİ HAZIRLAMA ---
-        // MetaCapiService'in yeni yapısını kullanarak trafik verilerini session'a işle
         MetaCapiService::captureTrafficData();
-
         $eventId = 'ab_' . Str::random(8) . '_' . time();
 
         try {
-            // 3. VERİTABANI KAYDI (Kritik Alan: Kaynak Tespiti)
+            // 3. VERİTABANI KAYDI
             $lead = Lead::create([
                 'type'         => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu',
-                'event_id'     => $eventId,
-                // Session'da varsa al, yoksa 'direct' yaz
+                'event_id' => $eventId,
                 'utm_source'   => session('utm_source', MetaCapiService::getDetectedSource()), 
                 'utm_campaign' => session('utm_campaign', '-'),
                 'fbclid'       => session('meta_fbclid') ?? request()->cookie('_fbc'),
@@ -62,7 +66,6 @@ class IndexController extends Controller
             ]);
 
             // 4. META CAPI GÖNDERİMİ
-            // customData içinde aksiyon detaylarını gönderiyoruz
             $customData = [
                 'content_name' => ($buttonId === 'meta-whatsapp') ? 'WhatsApp Lead' : 'Menu View',
                 'button_id'    => $buttonId,
@@ -70,10 +73,12 @@ class IndexController extends Controller
                 'currency'     => 'TRY',
             ];
 
-            // Service içindeki sendEvent metodunu çağırıyoruz
             MetaCapiService::sendEvent('Lead', $customData, $eventId);
 
-            // 5. KİLİDİ AKTİF ET
+            // 5. KİLİTLERİ AKTİF ET
+            // Kullanıcı bu oturumda bu butona bastı olarak işaretle
+            session()->put($sessionKey, now());
+            // IP bazlı geçici kilit koy
             Cache::put($lockKey, true, 30); 
 
         } catch (\Exception $e) {
