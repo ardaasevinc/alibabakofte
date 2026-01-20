@@ -18,12 +18,13 @@
 
     <meta name="keywords"
         content="{{ (isset($blog) && is_array($blog->tags)) ? implode(', ', $blog->tags) : ($settings->meta_keywords ?? 'çatalca köfte, meşhur çatalca köftecisi, ali baba köfte çatalca') }}">
-    
+
     <meta name="author" content="selquor.com">
     <meta name="robots" content="index, follow">
 
     <meta property="og:title" content="{{ isset($blog) ? $blog->title : $settings?->meta_title }}">
-    <meta property="og:description" content="{{ isset($blog) ? Str::limit(strip_tags($blog->desc), 160) : $settings?->meta_desc }}">
+    <meta property="og:description"
+        content="{{ isset($blog) ? Str::limit(strip_tags($blog->desc), 160) : $settings?->meta_desc }}">
     <meta property="og:image"
         content="{{ (isset($blog) && $blog->image) ? asset('uploads/' . $blog->image) : ($settings?->logo_dark ? asset('uploads/' . $settings?->logo_dark) : asset('site/alibaba/logos/logo-white.svg')) }}">
     <meta property="og:url" content="{{ url()->current() }}">
@@ -51,7 +52,7 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Ali Baba Köfte">
-    
+
     <link rel="apple-touch-icon" href="{{ asset('site/alibaba/icons/icon-192x192.png') }}">
 
     <script>
@@ -86,6 +87,15 @@
         @include('site.components.footer')
     </div>
 
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            if (!document.cookie.includes("browser_id=")) {
+                const bid = btoa(navigator.userAgent + screen.width + screen.height);
+                document.cookie = "browser_id=" + bid + "; path=/; max-age=" + (3600 * 24 * 365);
+            }
+        });
+    </script>
+
     <script src="{{ asset('site/js/jquery.min.js') }}"></script>
     <script src="{{ asset('site/js/bootstrap.min.js') }}"></script>
     <script src="{{ asset('site/js/flexslider.min.js') }}"></script>
@@ -95,7 +105,7 @@
     <script src="{{ asset('site/js/parallax.min.js') }}"></script>
     <script src="{{ asset('site/js/scripts.js') }}"></script>
 
-    
+
 </body>
 
 </html>

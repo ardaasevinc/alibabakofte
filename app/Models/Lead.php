@@ -7,28 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 class Lead extends Model
 {
-    use HasFactory;
-
-    /**
-     * Toplu atama yapılabilecek alanlar.
-     */
     protected $fillable = [
-        'type',
-        'event_id',
-        'event_name',
-        'utm_source',
-        'utm_campaign',
-        'utm_medium',
-        'fbclid',
-        'ip_address',
-        'user_agent',
+        'type', 'event_id', 'event_name',
+        'utm_source', 'utm_campaign', 'utm_medium',
+        'fbclid', 'gclid',
+        'device_id', 'session_hash', 'fbp', 'fbc', 'browser_id',
+        'ip_address', 'user_agent', 'referer', 'landing_page',
         'payload',
     ];
 
-    /**
-     * Veritabanından çekilirken otomatik dönüştürülecek alanlar.
-     */
     protected $casts = [
-        'payload' => 'json', // JSON veriyi otomatik diziye çevirir
+        'payload' => 'array',
     ];
 }

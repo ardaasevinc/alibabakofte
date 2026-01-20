@@ -21,146 +21,195 @@ class LeadResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Dönüşüm Takibi';
-    protected static ?string $modelLabel = 'Dönüşüm';
+    protected static ?string $modelLabel = 'Dönüşüm Kaydı';
     protected static ?string $pluralModelLabel = 'Dönüşümler (CAPI)';
 
     public static function form(Form $form): Form
     {
-        return $form->schema([]); // Veriler otomatik oluştuğu için form boş kalıyor.
+        return $form->schema([]); // Lead manuel oluşturulmaz
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
-        return $infolist
-            ->schema([
-                Section::make('Dönüşüm Özeti')
-                    ->description('Meta CAPI ve PWA üzerinden gelen ana veriler')
-                    ->schema([
-                        Grid::make(4)
-                            ->schema([
-                                TextEntry::make('payload.button_id')
-                                    ->label('Eylem Tipi')
-                                    ->badge()
-                                    ->icon(fn($state) => match ($state) {
-                                        'meta-menu' => 'heroicon-m-list-bullet',
-                                        'meta-whatsapp' => 'heroicon-m-chat-bubble-left-right',
-                                        default => 'heroicon-m-finger-print',
-                                    })
-                                    ->color(fn($state) => match ($state) {
-                                        'meta-menu' => 'warning',
-                                        'meta-whatsapp' => 'success',
-                                        default => 'gray',
-                                    })
-                                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                                        'meta-menu' => 'Menü Görüntüleme',
-                                        'meta-whatsapp' => 'WhatsApp İletişim',
-                                        default => $state,
-                                    }),
+        return $infolist->schema([
 
-                                TextEntry::make('utm_source')
-                                    ->label('Kaynak')
-                                    ->placeholder('Doğrudan Giriş')
-                                    ->badge()
-                                    ->color('info'),
+            Section::make('Dönüşüm Özeti')
+                ->description('Meta CAPI tarafından alınan dönüşüm bilgileri')
+                ->schema([
+                    Grid::make(4)->schema([
 
-                                TextEntry::make('utm_campaign')
-                                    ->label('Kampanya')
-                                    ->placeholder('Organik')
-                                    ->weight(FontWeight::Bold),
+                        TextEntry::make('type')
+                            ->label('Dönüşüm Tipi')
+                            ->badge()
+                            ->icon(
+                                fn($state) => $state === 'whatsapp'
+                                ? 'heroicon-m-chat-bubble-left-right'
+                                : 'heroicon-m-list-bullet'
+                            )
+                            ->color(fn($state) => $state === 'whatsapp' ? 'success' : 'warning')
+                            ->formatStateUsing(fn($state) => $state === 'whatsapp' ? 'WhatsApp' : 'Menü'),
 
-                                TextEntry::make('created_at')
-                                    ->label('Tarih/Saat')
-                                    ->dateTime('d M Y, H:i:s')
-                                    ->color('gray'),
-                            ]),
+                        TextEntry::make('utm_source')
+                            ->label('Kaynak (utm_source)')
+                            ->badge()
+                            ->placeholder('Doğrudan / Organik')
+                            ->color('info'),
+
+                        TextEntry::make('utm_campaign')
+                            ->label('Kampanya (utm_campaign)')
+                            ->placeholder('-')
+                            ->weight(FontWeight::SemiBold),
+
+                        TextEntry::make('created_at')
+                            ->label('Tarih')
+                            ->dateTime('d M Y H:i:s')
+                            ->color('gray'),
                     ]),
+                ]),
 
-                Section::make('Meta İzleme Parametreleri')
-                    ->description('Olay eşleştirme kalitesini (Matching Quality) belirleyen teknik veriler')
-                    ->schema([
-                        Grid::make(2)
-                            ->schema([
-                                TextEntry::make('event_id')
-                                    ->label('Meta Event ID (Deduplication)')
-                                    ->copyable()
-                                    ->fontFamily('mono')
-                                    ->icon('heroicon-m-finger-print'),
+            Section::make('Meta CAPI Parametreleri')
+                ->description('Eşleştirme kalitesini belirleyen teknik Meta parametreleri')
+                ->schema([
+                    Grid::make(2)->schema([
 
-                                TextEntry::make('fbclid')
-                                    ->label('Facebook Click ID (fbc)')
-                                    ->placeholder('Reklam dışı / Organik')
-                                    ->copyable()
-                                    ->fontFamily('mono')
-                                    ->color(fn($state) => $state ? 'success' : 'gray'),
+                        TextEntry::make('event_id')
+                            ->label('Event ID (Deduplication)')
+                            ->copyable()
+                            ->fontFamily('mono'),
 
-                                TextEntry::make('payload.came_from')
-                                    ->label('Dönüşümün Geldiği URL')
-                                    ->columnSpanFull()
-                                    ->url(fn($state) => $state)
-                                    ->openUrlInNewTab()
-                                    ->color('primary')
-                                    ->icon('heroicon-m-link')
-                                    ->placeholder('Bilgi yok'),
-                            ]),
-                    ])->collapsible(),
+                        TextEntry::make('fbclid')
+                            ->label('Facebook Click ID (fbclid)')
+                            ->copyable()
+                            ->placeholder('Reklam Tıklaması Yok')
+                            ->color(fn($state) => $state ? 'success' : 'gray'),
 
-                Section::make('Teknik Ziyaretçi Verileri')
-                    ->schema([
-                        Grid::make(3)
-                            ->schema([
-                                TextEntry::make('ip_address')->label('IP Adresi')->icon('heroicon-m-globe-alt'),
-                                TextEntry::make('user_agent')
-                                    ->label('Tarayıcı ve Cihaz Bilgisi')
-                                    ->columnSpan(2)
-                                    ->size('xs')
-                                    ->color('gray'),
-                            ]),
-                    ])->collapsible()->collapsed(),
-            ]);
+                        TextEntry::make('fbc')
+                            ->label('FBC')
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->placeholder('-'),
+
+                        TextEntry::make('fbp')
+                            ->label('FBP')
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->placeholder('-'),
+
+                        TextEntry::make('device_id')
+                            ->label('Device ID (Hashed)')
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('session_hash')
+                            ->label('Session Hash')
+                            ->copyable()
+                            ->fontFamily('mono')
+                            ->columnSpanFull(),
+                    ])
+                ])
+                ->collapsed()
+                ->collapsible(),
+
+            Section::make('Ziyaretçi Teknik Verileri')
+                ->schema([
+                    Grid::make(3)->schema([
+
+                        TextEntry::make('ip_address')
+                            ->label('IP Adresi')
+                            ->icon('heroicon-m-globe-alt'),
+
+                        TextEntry::make('browser_id')
+                            ->label('Tarayıcı Kimliği')
+                            ->placeholder('-')
+                            ->copyable()
+                            ->fontFamily('mono'),
+
+                        TextEntry::make('referer')
+                            ->label('Referer')
+                            ->placeholder('Yok')
+                            ->columnSpanFull(),
+
+                        TextEntry::make('landing_page')
+                            ->label('Geldiği Sayfa')
+                            ->icon('heroicon-m-link')
+                            ->url(fn($state) => $state)
+                            ->openUrlInNewTab()
+                            ->columnSpanFull(),
+                    ])
+                ])
+                ->collapsed()
+                ->collapsible(),
+
+            Section::make('Ek Veri (Payload)')
+
+                ->schema([
+                    TextEntry::make('payload')
+                        ->label('Payload JSON')
+                        ->formatStateUsing(function ($state) {
+                            if (blank($state)) {
+                                return 'Ek veri yok';
+                            }
+
+                            // Array veya object’i güzel JSON string’e çevir
+                            return json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+                        })
+                        ->copyable()
+                        ->extraAttributes([
+                            'class' => 'whitespace-pre-wrap text-xs font-mono',
+                        ])
+                        ->columnSpanFull(),
+                ])
+                ->collapsed()
+                ->collapsible(),
+
+
+        ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
+
                 TextColumn::make('created_at')
                     ->label('Zaman')
                     ->dateTime('H:i | d.m.Y')
                     ->sortable()
                     ->description(fn($record) => $record->created_at->diffForHumans()),
 
-                TextColumn::make('payload.button_id')
+                TextColumn::make('type')
                     ->label('Eylem')
                     ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        'meta-menu' => 'Menü',
-                        'meta-whatsapp' => 'WhatsApp',
-                        default => $state,
-                    })
-                    ->color(fn(string $state): string => match ($state) {
-                        'meta-menu' => 'warning',
-                        'meta-whatsapp' => 'success',
-                        default => 'gray',
-                    }),
+                    ->formatStateUsing(
+                        fn(string $state) =>
+                        $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
+                    )
+                    ->color(
+                        fn(string $state) =>
+                        $state === 'whatsapp' ? 'success' : 'warning'
+                    ),
 
                 TextColumn::make('utm_source')
                     ->label('Kaynak')
-                    ->placeholder('Direct')
+                    ->placeholder('Direct / Organik')
                     ->badge()
                     ->color('info')
                     ->searchable(),
 
                 TextColumn::make('fbclid')
                     ->label('Reklam')
-                    ->formatStateUsing(fn($state) => $state ? '✅' : '❌')
-                    ->alignCenter()
-                    ->tooltip('Facebook Reklam Tıklaması'),
+                    ->formatStateUsing(fn($state) => $state ? 'Meta Ads' : 'Organik')
+                    ->badge()
+                    ->color(fn($state) => $state ? 'success' : 'gray'),
 
                 TextColumn::make('ip_address')
                     ->label('IP')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->defaultSort('created_at', 'desc')
+
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Dönüşüm Tipi')
@@ -172,18 +221,19 @@ class LeadResource extends Resource
                 Tables\Filters\TernaryFilter::make('fbclid')
                     ->label('Trafik Tipi')
                     ->placeholder('Tümü')
-                    ->trueLabel('Ücretli (Meta Ads)')
-                    ->falseLabel('Organik / Diğer')
+                    ->trueLabel('Reklam (FB Ads)')
+                    ->falseLabel('Organik')
                     ->queries(
                         true: fn($query) => $query->whereNotNull('fbclid'),
                         false: fn($query) => $query->whereNull('fbclid'),
                     ),
             ])
+
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-            // TOPLU İŞLEMLER BURADA AKTİF EDİLDİ
+
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
@@ -191,8 +241,8 @@ class LeadResource extends Resource
                         ->icon('heroicon-m-trash'),
                 ]),
             ])
-            ->emptyStateHeading('Henüz veri yok')
-            ->emptyStateDescription('Meta CAPI veya PWA üzerinden ilk dönüşüm geldiğinde burada görünecektir.');
+            ->emptyStateHeading('Henüz dönüşüm yok')
+            ->emptyStateDescription('Meta CAPI veya PWA üzerinden dönüşümler burada görünür.');
     }
 
     public static function getPages(): array
