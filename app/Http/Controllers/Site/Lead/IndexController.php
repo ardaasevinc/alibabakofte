@@ -24,7 +24,7 @@ class IndexController extends Controller
      */
     public function menu(Request $request)
     {
-        return $this->processLead('meta-menu', route('site.menu'));
+        return $this->processLead('meta-menu', route('site.menu.index'));
     }
 
     /**
