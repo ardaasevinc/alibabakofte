@@ -28,30 +28,50 @@ class IndexController extends Controller
     }
 
     /**
-     * Ortak Kayıt ve Yönlendirme Mantığı
+     * Ortak Kayıt ve Yönlendirme Mantığı (Spam Kontrollü)
      */
     private function processLead($buttonId, $targetUrl)
     {
-        // 1. Meta Deduplication (Tekilleştirme) için benzersiz ID
         $eventId = 'lead_' . bin2hex(random_bytes(4)) . '_' . time();
         $previousUrl = url()->previous();
 
-        // 2. URL Parametrelerini Analiz Et
+        // URL parametrelerini çöz
         $urlComponents = parse_url($previousUrl);
         parse_str($urlComponents['query'] ?? '', $urlQueries);
 
         $fbclid = $urlQueries['fbclid'] ?? session('fbclid') ?? request()->query('fbclid');
 
+        // Kullanıcı bilgileri
+        $ip = request()->ip();
+        $agent = request()->userAgent();
+        $type = ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu';
+
+        /* ============================================================
+         * 1) SPAM / DOUBLE CLICK / REFRESH / BACK-FORWARD ENGELİ
+         * Son 24 saatte aynı (ip + agent + type) varsa kayıt oluşturulmaz.
+         * ============================================================ */
+        $exists = Lead::where('ip_address', $ip)
+            ->where('user_agent', $agent)
+            ->where('type', $type)
+            ->where('created_at', '>', now()->subDay())
+            ->exists();
+
+        if ($exists) {
+            return redirect()->to($targetUrl);
+        }
+
+        /* ============================================================
+         * 2) KAYIT OLUŞTUR
+         * ============================================================ */
         try {
-            // 3. Veritabanı Kaydı
             $lead = Lead::create([
-                'type'         => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu', 
+                'type'         => $type,
                 'event_id'     => $eventId,
                 'utm_source'   => $urlQueries['utm_source']   ?? session('utm_source') ?? 'direct',
                 'utm_campaign' => $urlQueries['utm_campaign'] ?? session('utm_campaign') ?? '-',
                 'fbclid'       => $fbclid,
-                'ip_address'   => request()->ip(),
-                'user_agent'   => request()->userAgent(),
+                'ip_address'   => $ip,
+                'user_agent'   => $agent,
                 'payload'      => [
                     'came_from'  => $previousUrl,
                     'button_id'  => $buttonId,
@@ -59,18 +79,21 @@ class IndexController extends Controller
                 ],
             ]);
 
-            // 4. Meta CAPI Gönderimi (Tazelenmiş Servis Çağrısı)
+            /* ============================================================
+             * 3) META CAPI EVENT
+             * ============================================================ */
             MetaCapiService::sendEvent('Lead', [
-                'external_id' => hash('sha256', (string) $lead->id),
-                'event_source_url' => $previousUrl,
-                // Eğer formda e-posta veya telefon alsaydık buraya hashleyip eklerdik
+                'external_id'       => hash('sha256', (string) $lead->id),
+                'event_source_url'  => $previousUrl,
             ], $eventId);
 
         } catch (\Exception $e) {
             Log::error("alibaba Lead Kayıt Hatası: " . $e->getMessage());
         }
 
-        // 5. Yönlendirme
+        /* ============================================================
+         * 4) YÖNLENDİR
+         * ============================================================ */
         return redirect()->to($targetUrl);
     }
 }
