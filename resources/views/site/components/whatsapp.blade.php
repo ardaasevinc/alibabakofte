@@ -84,7 +84,7 @@
     DİKKAT: href kısmını wa.me yerine kendi rotamıza yönlendirdik.
     Bu sayede tıklama anında Lead kaydı ve Meta CAPI tetiklenecek.
     --}}
-    <a href="{{ route('lead.whatsapp') }}" target="_blank" class="wp-float-btn">
+    <a href="{{ route('lead.whatsapp') }}" target="_blank" class="wp-float-btn" id="meta-whatsapp">
         <div class="wp-inner-content">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#25D366">
                 <path

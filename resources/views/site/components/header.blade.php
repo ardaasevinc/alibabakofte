@@ -37,7 +37,7 @@
                                     
                             </li>
                             <li>
-                                <a href="{{ route('lead.menu') }}" class="inner-link">Menü</a>
+                                <a id="meta-menu" href="{{ route('lead.menu') }}" class="inner-link">Menü</a>
                             </li>
                             <li>
                                 <a href="{{ Request::is('/') ? '#special' : url('/#special') }}"
