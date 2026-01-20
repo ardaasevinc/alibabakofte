@@ -13,7 +13,6 @@ class LeadAnalytics extends Page
     protected static ?string $navigationLabel = 'CAPI Analitiği';
     protected static ?string $title = 'Meta CAPI Analitiği';
     protected static ?string $slug = 'lead-analytics';
-
     protected static string $view = 'filament.pages.lead-analytics';
 
     public static function shouldRegisterNavigation(): bool
@@ -21,28 +20,34 @@ class LeadAnalytics extends Page
         return true;
     }
 
+    /* ---------------------------------------------------------
+     | 1) ANA STATİSTİKLER
+     |    - Toplam Lead
+     |    - Bugünkü Lead
+     |    - Eşsiz Ziyaret (session_hash)
+     |    - Dönüşüm Oranı
+     * --------------------------------------------------------*/
     public function getStats(): array
     {
         $today = Carbon::today();
 
-        $totalLeads = Lead::count();
-
+        $total = Lead::count();
         $todayLeads = Lead::whereDate('created_at', $today)->count();
 
-        $uniquePageViews = Lead::distinct('session_hash')->count('session_hash');
-
-        $conversionRate = $uniquePageViews > 0
-            ? round(($totalLeads / $uniquePageViews) * 100, 1)
-            : 0;
+        $unique = Lead::distinct('session_hash')->count('session_hash');
+        $rate = $unique > 0 ? round(($total / $unique) * 100, 1) : 0;
 
         return [
-            'total' => $totalLeads,
-            'today' => $todayLeads,
-            'unique' => $uniquePageViews,
-            'rate'  => $conversionRate,
+            'total'  => $total,
+            'today'  => $todayLeads,
+            'unique' => $unique,
+            'rate'   => $rate,
         ];
     }
 
+    /* ---------------------------------------------------------
+     | 2) UTM Kaynakları
+     * --------------------------------------------------------*/
     public function getUtmStats()
     {
         return Lead::select('utm_source', DB::raw('count(*) as total'))
@@ -53,6 +58,9 @@ class LeadAnalytics extends Page
             ->get();
     }
 
+    /* ---------------------------------------------------------
+     | 3) Browser ID Dağılımı
+     * --------------------------------------------------------*/
     public function getBrowserStats()
     {
         return Lead::select('browser_id', DB::raw('count(*) as total'))
@@ -63,6 +71,9 @@ class LeadAnalytics extends Page
             ->get();
     }
 
+    /* ---------------------------------------------------------
+     | 4) Device ID Dağılımı
+     * --------------------------------------------------------*/
     public function getDeviceStats()
     {
         return Lead::select('device_id', DB::raw('count(*) as total'))
@@ -72,6 +83,9 @@ class LeadAnalytics extends Page
             ->get();
     }
 
+    /* ---------------------------------------------------------
+     | 5) Son 7 Günlük Lead Trend
+     * --------------------------------------------------------*/
     public function getDailyLeadTrend()
     {
         return Lead::select(
