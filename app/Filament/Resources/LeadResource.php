@@ -15,7 +15,9 @@ use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\Indicator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 
 class LeadResource extends Resource
 {
@@ -52,25 +54,27 @@ class LeadResource extends Resource
                 TextColumn::make('utm_source')
                     ->label('Kaynak')
                     ->badge()
-                    ->color('info')
-                    ->placeholder('Organik/Direkt')
+                    // direct gelenleri uyarı rengi yaparak dikkat çekiyoruz
+                    ->color(fn($state) => in_array($state, ['direct', null]) ? 'danger' : 'info')
+                    ->formatStateUsing(fn($state) => strtoupper($state ?? 'DIREKT'))
                     ->searchable(),
 
                 TextColumn::make('utm_campaign')
                     ->label('Kampanya Adı')
-                    ->placeholder('Tanımsız')
-                    ->toggleable(),
+                    ->placeholder('Tanımsız / Organik')
+                    ->toggleable()
+                    ->limit(20),
 
-                TextColumn::make('ip_address')
-                    ->label('IP Adresi')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->copyable(),
+                // FBCLID varsa bir ikon göstererek reklamdan geldiğini teyit edelim
+                TextColumn::make('fbclid')
+                    ->label('Meta Reklam')
+                    ->formatStateUsing(fn($state) => $state ? '✅ Reklam' : '❌ Değil')
+                    ->badge()
+                    ->color(fn($state) => $state ? 'success' : 'gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
-            
-            // --- FİLTRELER BURADA BAŞLIYOR ---
             ->filters([
-                // 1. İşlem Tipine Göre Filtre (WhatsApp / Menü)
                 SelectFilter::make('type')
                     ->label('Dönüşüm Kanalı')
                     ->options([
@@ -78,12 +82,13 @@ class LeadResource extends Resource
                         'menu' => 'Menü Görüntüleme',
                     ]),
 
-                // 2. UTM Kaynağına Göre (Facebook, Google, Instagram vb.)
+                // Kaynak filtresini daha akıllı hale getirdik
                 SelectFilter::make('utm_source')
                     ->label('Reklam Kaynağı')
-                    ->options(fn () => Lead::distinct()->whereNotNull('utm_source')->pluck('utm_source', 'utm_source')->toArray()),
+                    ->options(fn() => Lead::whereNotNull('utm_source')->distinct()->pluck('utm_source', 'utm_source')->toArray())
+                    ->searchable(),
 
-                // 3. Tarih Aralığı Filtresi (Bugün, Dün, Bu Hafta vb.)
+                // Tarih filtresine hızlı seçimler eklendi
                 Filter::make('created_at')
                     ->form([
                         \Filament\Forms\Components\DatePicker::make('created_from')->label('Başlangıç'),
@@ -91,18 +96,23 @@ class LeadResource extends Resource
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['created_from'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date))
-                            ->when($data['created_until'], fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date));
+                            ->when($data['created_from'], fn($query, $date) => $query->whereDate('created_at', '>=', $date))
+                            ->when($data['created_until'], fn($query, $date) => $query->whereDate('created_at', '<=', $date));
+                    })
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['created_from'] ?? null) {
+                            $indicators[] = Indicator::make('Başlangıç: ' . Carbon::parse($data['created_from'])->toFormattedDateString());
+                        }
+                        if ($data['created_until'] ?? null) {
+                            $indicators[] = Indicator::make('Bitiş: ' . Carbon::parse($data['created_until'])->toFormattedDateString());
+                        }
+                        return $indicators;
                     })
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()->label('İncele'),
                 Tables\Actions\DeleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
             ]);
     }
 
@@ -114,20 +124,25 @@ class LeadResource extends Resource
                     ->schema([
                         Grid::make(3)
                             ->schema([
-                                TextEntry::make('utm_source')->label('Geliş Kaynağı')->badge()->color('info'),
-                                TextEntry::make('utm_medium')->label('Medium')->placeholder('cpc / social'),
+                                TextEntry::make('utm_source')
+                                    ->label('Geliş Kaynağı')
+                                    ->badge()
+                                    ->color(fn($state) => $state === 'direct' ? 'danger' : 'info'),
                                 TextEntry::make('utm_campaign')->label('Kampanya')->weight('bold'),
+                                TextEntry::make('created_at')->label('İşlem Zamanı')->dateTime('d M Y, H:i:s'),
                             ]),
                     ]),
                 
                 Section::make('Meta CAPI & Teknik Detaylar')
-                    ->description('Bu veriler Facebook reklam optimizasyonu için sunucu tarafında işlenir.')
+                    ->description('Facebook reklam optimizasyonu verileri.')
                     ->schema([
                         Grid::make(2)
                             ->schema([
                                 TextEntry::make('event_id')->label('Meta Event ID')->fontFamily('mono')->copyable(),
                                 TextEntry::make('fbclid')->label('Facebook Click ID (fbc)')->fontFamily('mono')->placeholder('Reklam dışı giriş'),
-                                TextEntry::make('payload.came_from')->label('Tıklanan Son Sayfa')->url(fn($state) => $state)->openUrlInNewTab()->color('primary'),
+                                // Payload içindeki veriyi daha temiz çekelim
+                                TextEntry::make('payload.referer')->label('Geldiği URL')->url(fn($state) => $state)->openUrlInNewTab(),
+                                TextEntry::make('ip_address')->label('IP Adresi')->copyable(),
                                 TextEntry::make('user_agent')->label('Cihaz/Tarayıcı')->size('xs')->columnSpanFull(),
                             ]),
                     ])->collapsible(),

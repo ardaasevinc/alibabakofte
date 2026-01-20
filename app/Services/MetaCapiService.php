@@ -2,84 +2,108 @@
 
 namespace App\Services;
 
-use App\Models\Setting;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
 
 class MetaCapiService
 {
-    public static function sendEvent(string $eventName, array $userData = [], array $customData = [], ?string $eventId = null, ?string $testEventCode = null): void
+    /**
+     * Meta Event Builder & Sender
+     */
+    public static function sendEvent(string $eventName, array $customData = [], ?string $eventId = null)
     {
-        $settings = Setting::first(); 
-        if (!$settings || !$settings->facebook_pixel_code || !$settings->facebook_access_token) return;
-
-        $pixelId = $settings->facebook_pixel_code;
-        $accessToken = $settings->facebook_access_token;
+        $pixelId = config('services.meta.pixel_id');
+        $accessToken = config('services.meta.access_token');
         $apiVersion = 'v21.0';
 
-        // 1. External ID: Varsa gönderilen, yoksa cookie, o da yoksa yeni UUID
-        $externalId = $userData['external_id'] ?? request()->cookie('meta_ext_id');
-        if (!$externalId) {
-            $externalId = (string) Str::uuid();
-            Cookie::queue('meta_ext_id', $externalId, 525600);
-        }
+        // Tekilleştirme: Hem Browser hem Server tarafında aynı ID gitmeli
+        $eventId = $eventId ?? (string) Str::uuid();
 
-        // 2. Payload Hazırlama
+        // 1. Önce URL'den gelen parametreleri yakala ve session'a at (Kalıcılık için)
+        self::captureTrafficData();
+
         $payload = [
-            'data' => [[
-                'event_name' => $eventName,
-                'event_time' => time(),
-                'event_id'   => $eventId ?? (string) Str::uuid(),
-                'action_source' => 'website',
-                'event_source_url' => request()->header('referer') ?? request()->fullUrl(),
-                'user_data' => array_filter([
-                    'client_ip_address' => request()->header('X-Forwarded-For') ?? request()->ip(),
-                    'client_user_agent' => request()->userAgent(),
-                    'fbp' => request()->cookie('_fbp'),
-                    'fbc' => self::getFbc(),
-                    'external_id' => $externalId, 
-                    // PII Verileri (Otomatik Hashlenir)
-                    'em' => isset($userData['email']) ? self::hashData($userData['email']) : null,
-                    'ph' => isset($userData['phone']) ? self::hashData($userData['phone'], true) : null,
-                ]),
-                'custom_data' => array_filter([
-                    'value' => $customData['value'] ?? null,
-                    'currency' => strtoupper($customData['currency'] ?? 'TRY'),
-                    'content_name' => $customData['content_name'] ?? null,
-                    'content_type' => $customData['content_type'] ?? 'product',
-                ]),
-            ]],
+            'data' => [
+                [
+                    'event_name' => $eventName,
+                    'event_time' => time(),
+                    'action_source' => 'website',
+                    'event_id' => $eventId,
+                    'event_source_url' => request()->fullUrl(),
+                    'user_data' => array_filter([
+                        // IP ve User Agent her zaman kritik
+                        'client_ip_address' => request()->ip(),
+                        'client_user_agent' => request()->userAgent(),
+                        
+                        // Meta Çerezleri: Önce çereze bak, yoksa az önce yakaladığımız session'a bak
+                        'fbp' => request()->cookie('_fbp') ?? session('meta_fbp'),
+                        'fbc' => request()->cookie('_fbc') ?? self::getFormattedFbc(),
+                        
+                        // Oturum açmayan kullanıcı için en stabil kimlik: session_id hash
+                        'external_id' => hash('sha256', session()->getId()),
+                        
+                        // Lokasyon Tahmini (Dil üzerinden)
+                        'country' => self::hashData(substr(request()->getLanguages()[0] ?? 'tr', -2)), 
+                    ]),
+                    'custom_data' => array_merge($customData, [
+                        'traffic_source' => self::getDetectedSource(), // Analiz için ekledik
+                    ]),
+                ],
+            ],
         ];
 
-        if ($testEventCode) {
-            $payload['test_event_code'] = $testEventCode;
-        }
-
-        // 3. Gönderim
         try {
-            Http::withToken($accessToken)->timeout(5)
-                ->post("https://graph.facebook.com/{$apiVersion}/{$pixelId}/events", $payload);
+            return Http::post("https://graph.facebook.com/{$apiVersion}/{$pixelId}/events?access_token={$accessToken}", $payload);
         } catch (\Exception $e) {
-            Log::warning("Meta CAPI Hatası: " . $e->getMessage());
+            Log::error("Meta CAPI Error: " . $e->getMessage());
+            return null;
         }
     }
 
-    private static function getFbc(): ?string
+    /**
+     * URL'deki fbclid ve UTM parametrelerini session'da saklar.
+     * Bu sayede kullanıcı sayfalar arası gezse de "kaynak" kaybolmaz.
+     */
+    public static function captureTrafficData(): void
     {
-        $fbc = request()->cookie('_fbc');
-        if ($fbc) return $fbc;
+        if (request()->has('fbclid')) {
+            session(['meta_fbclid' => request()->query('fbclid')]);
+        }
 
-        $fbclid = request()->query('fbclid');
+        if (request()->has('utm_source')) {
+            session(['utm_source' => request()->query('utm_source')]);
+            session(['utm_campaign' => request()->query('utm_campaign', '-')]);
+        }
+    }
+
+    /**
+     * Veritabanına kaydedilecek kaynağı belirler.
+     */
+    public static function getDetectedSource(): string
+    {
+        if (session('utm_source') === 'facebook' || session('meta_fbclid')) {
+            return 'Facebook Ad';
+        }
+        
+        if (request()->headers->get('referer')) {
+            $host = parse_url(request()->headers->get('referer'), PHP_URL_HOST);
+            if (str_contains($host, 'facebook.com') || str_contains($host, 'instagram.com')) {
+                return 'Social Media';
+            }
+        }
+
+        return 'direct';
+    }
+
+    private static function getFormattedFbc(): ?string
+    {
+        $fbclid = request()->query('fbclid') ?? session('meta_fbclid');
         return $fbclid ? 'fb.1.' . time() . '.' . $fbclid : null;
     }
 
-    private static function hashData(?string $data, bool $isPhone = false): ?string
+    private static function hashData($data): ?string
     {
-        if (!$data) return null;
-        $data = strtolower(trim($data));
-        if ($isPhone) $data = preg_replace('/[^0-9]/', '', $data);
-        return hash('sha256', $data);
+        return $data ? hash('sha256', strtolower(trim((string)$data))) : null;
     }
 }
