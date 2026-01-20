@@ -31,7 +31,7 @@
                     </div>
                 @endif
                 <span class="mb24 mt24 text-center" style="display: block; width: 100%;">
-                    {{ $blog->created_at->translatedFormat('d F Y') }}
+                    {{ $blog->updated_at->translatedFormat('d F Y') }}
                 </span>
 
                 {{-- Blog İçeriği ve Etiketler --}}
