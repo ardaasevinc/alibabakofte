@@ -37,7 +37,7 @@ class MetaCapiService
                     'event_id'         => $eventId,
                     'action_source'    => 'website',
                     'event_source_url' => Request::headers()->get('referer') ?? Request::fullUrl(),
-                    'test_event_code'  => config('services.meta.test_code'),
+                   
 
                     'user_data' => array_filter([
                         'client_ip_address' => Request::ip(),
