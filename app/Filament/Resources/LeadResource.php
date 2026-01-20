@@ -6,9 +6,9 @@ use App\Filament\Resources\LeadResource\Pages;
 use App\Models\Lead;
 use Filament\Forms\Form;
 use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\Grid;
 use Filament\Resources\Resource;
 use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
@@ -26,139 +26,136 @@ class LeadResource extends Resource
 
     public static function form(Form $form): Form
     {
-        // Elle lead oluşturulmaz.
-        return $form->schema([]);
+        return $form->schema([]); // Manual create yok
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
-
-            Section::make('Dönüşüm Bilgisi')
-                ->description('Meta CAPI tarafından kaydedilen dönüşüm detayları')
+            Section::make('Dönüşüm Özeti')
                 ->schema([
                     Grid::make(4)->schema([
 
                         TextEntry::make('type')
                             ->label('Dönüşüm Tipi')
                             ->badge()
-                            ->color(fn($val) => $val === 'whatsapp' ? 'success' : 'warning')
-                            ->formatStateUsing(fn($val) => $val === 'whatsapp' ? 'WhatsApp' : 'Menü')
-                            ->icon(fn($val) => $val === 'whatsapp'
-                                ? 'heroicon-m-chat-bubble-left-right'
-                                : 'heroicon-m-list-bullet'),
+                            ->icon(fn($state) =>
+                                $state === 'whatsapp'
+                                    ? 'heroicon-m-chat-bubble-left-right'
+                                    : 'heroicon-m-list-bullet'
+                            )
+                            ->color(fn($state) =>
+                                $state === 'whatsapp' ? 'success' : 'warning'
+                            )
+                            ->formatStateUsing(fn($state) =>
+                                $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
+                            ),
 
                         TextEntry::make('utm_source')
-                            ->label('utm_source')
+                            ->label('Kaynak')
                             ->badge()
                             ->placeholder('Direct / Organik')
-                            ->color('info')
-                            ->weight(FontWeight::Bold),
+                            ->color('info'),
 
                         TextEntry::make('utm_campaign')
-                            ->label('utm_campaign')
-                            ->placeholder('-'),
+                            ->label('Kampanya')
+                            ->placeholder('-')
+                            ->weight(FontWeight::SemiBold),
 
                         TextEntry::make('created_at')
                             ->label('Tarih')
-                            ->dateTime('d.m.Y H:i')
-                            ->color('gray'),
-
-                    ])
+                            ->dateTime('d M Y H:i:s'),
+                    ]),
                 ]),
 
-            Section::make('Meta Eşleştirme Parametreleri')
-                ->collapsed()
+            Section::make('Meta CAPI Parametreleri')
                 ->collapsible()
+                ->collapsed()
                 ->schema([
                     Grid::make(2)->schema([
 
                         TextEntry::make('event_id')
-                            ->label('Event ID (Dedup)')
+                            ->label('Event ID')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('fbclid')
-                            ->label('fbclid')
-                            ->badge()
-                            ->color(fn($val) => $val ? 'success' : 'gray')
-                            ->placeholder('FB Ads tıklaması yok'),
+                            ->label('FBCLID')
+                            ->copyable()
+                            ->placeholder('-')
+                            ->color(fn($state) =>
+                                $state ? 'success' : 'gray'
+                            ),
 
                         TextEntry::make('fbc')
-                            ->label('fbc')
+                            ->label('FBC')
                             ->copyable()
-                            ->fontFamily('mono')
-                            ->placeholder('-'),
+                            ->fontFamily('mono'),
 
                         TextEntry::make('fbp')
-                            ->label('fbp')
+                            ->label('FBP')
                             ->copyable()
-                            ->fontFamily('mono')
-                            ->placeholder('-'),
+                            ->fontFamily('mono'),
 
                         TextEntry::make('device_id')
-                            ->label('Hashed Device ID')
+                            ->label('Device ID')
                             ->copyable()
-                            ->fontFamily('mono')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->fontFamily('mono'),
 
                         TextEntry::make('session_hash')
                             ->label('Session Hash')
                             ->copyable()
-                            ->fontFamily('mono')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->fontFamily('mono'),
                     ])
                 ]),
 
-            Section::make('Ziyaretçi Teknik Bilgileri')
-                ->collapsed()
+            Section::make('Ziyaretçi Teknİk Verileri')
                 ->collapsible()
+                ->collapsed()
                 ->schema([
-                    Grid::make(2)->schema([
-
+                    Grid::make(3)->schema([
                         TextEntry::make('ip_address')
-                            ->label('IP Adresi')
+                            ->label('IP')
                             ->icon('heroicon-m-globe-alt'),
 
                         TextEntry::make('browser_id')
                             ->label('Browser ID')
-                            ->placeholder('-')
                             ->copyable()
+                            ->placeholder('-')
                             ->fontFamily('mono'),
 
                         TextEntry::make('referer')
                             ->label('Referer')
-                            ->columnSpanFull()
-                            ->placeholder('Yok'),
+                            ->placeholder('-')
+                            ->columnSpanFull(),
 
                         TextEntry::make('landing_page')
                             ->label('Geldiği Sayfa')
                             ->url(fn($state) => $state)
                             ->openUrlInNewTab()
-                            ->icon('heroicon-m-link')
                             ->columnSpanFull(),
                     ])
                 ]),
 
-            Section::make('Payload (Ek Veri)')
-                ->collapsed()
+            Section::make('Payload')
                 ->collapsible()
+                ->collapsed()
                 ->schema([
                     TextEntry::make('payload')
                         ->label('Payload JSON')
-                        ->formatStateUsing(function ($state) {
-                            if (!$state) {
-                                return 'Ek veri yok';
-                            }
-                            return json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-                        })
+                        ->formatStateUsing(fn($state) =>
+                            blank($state)
+                                ? 'Ek veri yok'
+                                : json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                        )
                         ->copyable()
                         ->extraAttributes([
-                            'class' => 'whitespace-pre-wrap text-xs font-mono',
+                            'class' => 'whitespace-pre-wrap text-xs font-mono'
                         ])
                         ->columnSpanFull(),
                 ]),
-
         ]);
     }
 
@@ -170,75 +167,46 @@ class LeadResource extends Resource
                 TextColumn::make('created_at')
                     ->label('Zaman')
                     ->dateTime('H:i | d.m.Y')
-                    ->sortable()
-                    ->description(fn($record) => $record->created_at->diffForHumans()),
+                    ->sortable(),
 
                 TextColumn::make('type')
                     ->label('Eylem')
                     ->badge()
-                    ->formatStateUsing(fn($s) => $s === 'whatsapp' ? 'WhatsApp' : 'Menü')
-                    ->color(fn($s) => $s === 'whatsapp' ? 'success' : 'warning')
-                    ->icon(fn($s) => $s === 'whatsapp'
-                        ? 'heroicon-m-chat-bubble-left-right'
-                        : 'heroicon-m-list-bullet'),
+                    ->formatStateUsing(fn($state) =>
+                        $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
+                    )
+                    ->color(fn($state) =>
+                        $state === 'whatsapp' ? 'success' : 'warning'
+                    ),
 
                 TextColumn::make('utm_source')
                     ->label('Kaynak')
                     ->badge()
                     ->color('info')
-                    ->placeholder('Direct / Organik')
-                    ->sortable()
                     ->searchable(),
 
                 TextColumn::make('fbclid')
                     ->label('Reklam')
+                    ->formatStateUsing(fn($state) =>
+                        $state ? 'Meta Ads' : 'Organik'
+                    )
                     ->badge()
-                    ->formatStateUsing(fn($s) => $s ? 'Meta Ads' : 'Organik')
-                    ->color(fn($s) => $s ? 'success' : 'gray'),
+                    ->color(fn($state) =>
+                        $state ? 'success' : 'gray'
+                    ),
 
                 TextColumn::make('ip_address')
                     ->label('IP')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->sortable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
-
             ->defaultSort('created_at', 'desc')
-
-            ->filters([
-
-                Tables\Filters\SelectFilter::make('type')
-                    ->label('Dönüşüm Tipi')
-                    ->options([
-                        'menu' => 'Menü',
-                        'whatsapp' => 'WhatsApp',
-                    ]),
-
-                Tables\Filters\TernaryFilter::make('fbclid')
-                    ->label('Trafik')
-                    ->placeholder('Tümü')
-                    ->trueLabel('Reklam (FB Ads)')
-                    ->falseLabel('Organik Trafik')
-                    ->queries(
-                        true: fn($q) => $q->whereNotNull('fbclid'),
-                        false: fn($q) => $q->whereNull('fbclid'),
-                    ),
-            ])
-
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()
-                        ->requiresConfirmation()
-                        ->icon('heroicon-m-trash'),
-                ]),
-            ])
-
-            ->emptyStateHeading('Henüz dönüşüm yok')
-            ->emptyStateDescription('Meta CAPI veya site etkileşimlerinden gelen dönüşümler burada listelenir.');
+                Tables\Actions\DeleteBulkAction::make(),
+            ]);
     }
 
     public static function getPages(): array
