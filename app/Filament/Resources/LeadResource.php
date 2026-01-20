@@ -5,15 +5,15 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\LeadResource\Pages;
 use App\Models\Lead;
 use Filament\Forms\Form;
-use Filament\Resources\Resource;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\Grid;
+use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Support\Enums\FontWeight;
 
 class LeadResource extends Resource
 {
@@ -26,77 +26,78 @@ class LeadResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema([]); // Lead manuel oluşturulmaz
+        // Elle lead oluşturulmaz.
+        return $form->schema([]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
 
-            Section::make('Dönüşüm Özeti')
-                ->description('Meta CAPI tarafından alınan dönüşüm bilgileri')
+            Section::make('Dönüşüm Bilgisi')
+                ->description('Meta CAPI tarafından kaydedilen dönüşüm detayları')
                 ->schema([
                     Grid::make(4)->schema([
 
                         TextEntry::make('type')
                             ->label('Dönüşüm Tipi')
                             ->badge()
-                            ->icon(
-                                fn($state) => $state === 'whatsapp'
+                            ->color(fn($val) => $val === 'whatsapp' ? 'success' : 'warning')
+                            ->formatStateUsing(fn($val) => $val === 'whatsapp' ? 'WhatsApp' : 'Menü')
+                            ->icon(fn($val) => $val === 'whatsapp'
                                 ? 'heroicon-m-chat-bubble-left-right'
-                                : 'heroicon-m-list-bullet'
-                            )
-                            ->color(fn($state) => $state === 'whatsapp' ? 'success' : 'warning')
-                            ->formatStateUsing(fn($state) => $state === 'whatsapp' ? 'WhatsApp' : 'Menü'),
+                                : 'heroicon-m-list-bullet'),
 
                         TextEntry::make('utm_source')
-                            ->label('Kaynak (utm_source)')
+                            ->label('utm_source')
                             ->badge()
-                            ->placeholder('Doğrudan / Organik')
-                            ->color('info'),
+                            ->placeholder('Direct / Organik')
+                            ->color('info')
+                            ->weight(FontWeight::Bold),
 
                         TextEntry::make('utm_campaign')
-                            ->label('Kampanya (utm_campaign)')
-                            ->placeholder('-')
-                            ->weight(FontWeight::SemiBold),
+                            ->label('utm_campaign')
+                            ->placeholder('-'),
 
                         TextEntry::make('created_at')
                             ->label('Tarih')
-                            ->dateTime('d M Y H:i:s')
+                            ->dateTime('d.m.Y H:i')
                             ->color('gray'),
-                    ]),
+
+                    ])
                 ]),
 
-            Section::make('Meta CAPI Parametreleri')
-                ->description('Eşleştirme kalitesini belirleyen teknik Meta parametreleri')
+            Section::make('Meta Eşleştirme Parametreleri')
+                ->collapsed()
+                ->collapsible()
                 ->schema([
                     Grid::make(2)->schema([
 
                         TextEntry::make('event_id')
-                            ->label('Event ID (Deduplication)')
+                            ->label('Event ID (Dedup)')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('fbclid')
-                            ->label('Facebook Click ID (fbclid)')
-                            ->copyable()
-                            ->placeholder('Reklam Tıklaması Yok')
-                            ->color(fn($state) => $state ? 'success' : 'gray'),
+                            ->label('fbclid')
+                            ->badge()
+                            ->color(fn($val) => $val ? 'success' : 'gray')
+                            ->placeholder('FB Ads tıklaması yok'),
 
                         TextEntry::make('fbc')
-                            ->label('FBC')
+                            ->label('fbc')
                             ->copyable()
                             ->fontFamily('mono')
                             ->placeholder('-'),
 
                         TextEntry::make('fbp')
-                            ->label('FBP')
+                            ->label('fbp')
                             ->copyable()
                             ->fontFamily('mono')
                             ->placeholder('-'),
 
                         TextEntry::make('device_id')
-                            ->label('Device ID (Hashed)')
+                            ->label('Hashed Device ID')
                             ->copyable()
                             ->fontFamily('mono')
                             ->columnSpanFull(),
@@ -107,51 +108,48 @@ class LeadResource extends Resource
                             ->fontFamily('mono')
                             ->columnSpanFull(),
                     ])
-                ])
-                ->collapsed()
-                ->collapsible(),
+                ]),
 
-            Section::make('Ziyaretçi Teknik Verileri')
+            Section::make('Ziyaretçi Teknik Bilgileri')
+                ->collapsed()
+                ->collapsible()
                 ->schema([
-                    Grid::make(3)->schema([
+                    Grid::make(2)->schema([
 
                         TextEntry::make('ip_address')
                             ->label('IP Adresi')
                             ->icon('heroicon-m-globe-alt'),
 
                         TextEntry::make('browser_id')
-                            ->label('Tarayıcı Kimliği')
+                            ->label('Browser ID')
                             ->placeholder('-')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('referer')
                             ->label('Referer')
-                            ->placeholder('Yok')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->placeholder('Yok'),
 
                         TextEntry::make('landing_page')
                             ->label('Geldiği Sayfa')
-                            ->icon('heroicon-m-link')
                             ->url(fn($state) => $state)
                             ->openUrlInNewTab()
+                            ->icon('heroicon-m-link')
                             ->columnSpanFull(),
                     ])
-                ])
+                ]),
+
+            Section::make('Payload (Ek Veri)')
                 ->collapsed()
-                ->collapsible(),
-
-            Section::make('Ek Veri (Payload)')
-
+                ->collapsible()
                 ->schema([
                     TextEntry::make('payload')
                         ->label('Payload JSON')
                         ->formatStateUsing(function ($state) {
-                            if (blank($state)) {
+                            if (!$state) {
                                 return 'Ek veri yok';
                             }
-
-                            // Array veya object’i güzel JSON string’e çevir
                             return json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
                         })
                         ->copyable()
@@ -159,10 +157,7 @@ class LeadResource extends Resource
                             'class' => 'whitespace-pre-wrap text-xs font-mono',
                         ])
                         ->columnSpanFull(),
-                ])
-                ->collapsed()
-                ->collapsible(),
-
+                ]),
 
         ]);
     }
@@ -181,51 +176,51 @@ class LeadResource extends Resource
                 TextColumn::make('type')
                     ->label('Eylem')
                     ->badge()
-                    ->formatStateUsing(
-                        fn(string $state) =>
-                        $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
-                    )
-                    ->color(
-                        fn(string $state) =>
-                        $state === 'whatsapp' ? 'success' : 'warning'
-                    ),
+                    ->formatStateUsing(fn($s) => $s === 'whatsapp' ? 'WhatsApp' : 'Menü')
+                    ->color(fn($s) => $s === 'whatsapp' ? 'success' : 'warning')
+                    ->icon(fn($s) => $s === 'whatsapp'
+                        ? 'heroicon-m-chat-bubble-left-right'
+                        : 'heroicon-m-list-bullet'),
 
                 TextColumn::make('utm_source')
                     ->label('Kaynak')
-                    ->placeholder('Direct / Organik')
                     ->badge()
                     ->color('info')
+                    ->placeholder('Direct / Organik')
+                    ->sortable()
                     ->searchable(),
 
                 TextColumn::make('fbclid')
                     ->label('Reklam')
-                    ->formatStateUsing(fn($state) => $state ? 'Meta Ads' : 'Organik')
                     ->badge()
-                    ->color(fn($state) => $state ? 'success' : 'gray'),
+                    ->formatStateUsing(fn($s) => $s ? 'Meta Ads' : 'Organik')
+                    ->color(fn($s) => $s ? 'success' : 'gray'),
 
                 TextColumn::make('ip_address')
                     ->label('IP')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->sortable(),
             ])
 
             ->defaultSort('created_at', 'desc')
 
             ->filters([
+
                 Tables\Filters\SelectFilter::make('type')
                     ->label('Dönüşüm Tipi')
                     ->options([
-                        'whatsapp' => 'WhatsApp',
                         'menu' => 'Menü',
+                        'whatsapp' => 'WhatsApp',
                     ]),
 
                 Tables\Filters\TernaryFilter::make('fbclid')
-                    ->label('Trafik Tipi')
+                    ->label('Trafik')
                     ->placeholder('Tümü')
                     ->trueLabel('Reklam (FB Ads)')
-                    ->falseLabel('Organik')
+                    ->falseLabel('Organik Trafik')
                     ->queries(
-                        true: fn($query) => $query->whereNotNull('fbclid'),
-                        false: fn($query) => $query->whereNull('fbclid'),
+                        true: fn($q) => $q->whereNotNull('fbclid'),
+                        false: fn($q) => $q->whereNull('fbclid'),
                     ),
             ])
 
@@ -241,8 +236,9 @@ class LeadResource extends Resource
                         ->icon('heroicon-m-trash'),
                 ]),
             ])
+
             ->emptyStateHeading('Henüz dönüşüm yok')
-            ->emptyStateDescription('Meta CAPI veya PWA üzerinden dönüşümler burada görünür.');
+            ->emptyStateDescription('Meta CAPI veya site etkileşimlerinden gelen dönüşümler burada listelenir.');
     }
 
     public static function getPages(): array
