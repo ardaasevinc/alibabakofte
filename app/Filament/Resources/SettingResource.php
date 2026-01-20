@@ -87,8 +87,8 @@ class SettingResource extends Resource
                         Tab::make('Analiz & İzleme (ENV)')
                             ->icon('heroicon-o-presentation-chart-line')
                             ->schema([
-                                Section::make('Meta & Google API Ayarları')
-                                    ->description('Bu ayarlar veritabanında tutulur ve uygulama çalıştığında config/env değerlerini ezer.')
+                                Section::make('API ve Takip ID Bilgileri')
+                                    ->description('Buradaki ID bilgileri layout tarafındaki scriptler ve Meta CAPI servisi için kullanılır.')
                                     ->schema([
                                         Grid::make(2)->schema([
                                             TextInput::make('facebook_pixel_id')
@@ -103,15 +103,11 @@ class SettingResource extends Resource
                                                 ->label('Meta CAPI Access Token')
                                                 ->rows(3)
                                                 ->columnSpanFull()
-                                                ->helperText('Meta Business Suite panelinden aldığınız uzun Access Token.'),
-                                        ]),
-                                    ]),
-                                
-                                Section::make('Script Kodları')
-                                    ->schema([
-                                        Grid::make(2)->schema([
-                                            Textarea::make('facebook_pixel_code')->label('Pixel JS Kodu')->rows(8),
-                                            Textarea::make('google_analytics_code_js')->label('Analytics JS Kodu')->rows(8),
+                                                ->helperText('Meta Business Suite panelinden aldığınız CAPI Access Token değerini girin.'),
+                                            
+                                            TextInput::make('instagram_access_token')
+                                                ->label('Instagram Access Token')
+                                                ->columnSpanFull(),
                                         ]),
                                     ]),
                             ]),
@@ -126,7 +122,7 @@ class SettingResource extends Resource
                                         Select::make('app_env')
                                             ->label('Çalışma Ortamı')
                                             ->options(['local' => 'Local', 'production' => 'Production']),
-                                        Toggle::make('app_debug')->label('Debug Modu (Hata Detayları)'),
+                                        Toggle::make('app_debug')->label('Debug Modu'),
                                     ]),
                                     Section::make('Mail (SMTP) Ayarları')->columnSpan(8)->schema([
                                         Grid::make(2)->schema([

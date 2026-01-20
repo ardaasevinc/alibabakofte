@@ -26,7 +26,7 @@ class Setting extends Model
                 'MAIL_FROM_ADDRESS'     => $setting->mail_from_address,
                 'MAIL_FROM_NAME'        => $setting->mail_from_name,
                 // Meta ve Google ID'lerini de ENV'ye ekliyoruz (Script kodlarını değil, sadece ID'leri)
-                'FACEBOOK_PIXEL_ID'     => $setting->facebook_pixel_id,
+                'FACEBOOK_PIXEL_ID'     => $setting->facebook_pixel_code,
                 'FACEBOOK_ACCESS_TOKEN' => $setting->facebook_access_token,
                 'GOOGLE_ANALYTICS_ID'   => $setting->google_analytics_code,
             ];
