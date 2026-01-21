@@ -3,14 +3,14 @@
 ])
 
 @php
-    $openSidebarClasses = 'fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0';
-    $isRtl = __('filament-panels::layout.direction') === 'rtl';
+$openSidebarClasses = 'fi-sidebar-open w-[--sidebar-width] translate-x-0 shadow-xl ring-1 ring-gray-950/5 dark:ring-white/10 rtl:-translate-x-0';
+$isRtl = __('filament-panels::layout.direction') === 'rtl';
 @endphp
 
 {{-- format-ignore-start --}}
 <aside
     x-data="{}"
-    @if (filament()->isSidebarCollapsibleOnDesktop() && (! filament()->hasTopNavigation()))
+    @if (filament()->isSidebarCollapsibleOnDesktop() && (!filament()->hasTopNavigation()))
         x-cloak
         x-bind:class="
             $store.sidebar.isOpen
@@ -34,11 +34,11 @@
         @endif
     @endif
     {{
-        $attributes->class([
-            'fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent',
-            'lg:translate-x-0 rtl:lg:-translate-x-0' => ! (filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop() || filament()->hasTopNavigation()),
-            'lg:-translate-x-full rtl:lg:translate-x-full' => filament()->hasTopNavigation(),
-        ])
+    $attributes->class([
+        'fi-sidebar fixed inset-y-0 start-0 z-30 flex flex-col h-screen content-start bg-white transition-all dark:bg-gray-900 lg:z-0 lg:bg-transparent lg:shadow-none lg:ring-0 lg:transition-none dark:lg:bg-transparent',
+        'lg:translate-x-0 rtl:lg:-translate-x-0' => !(filament()->isSidebarCollapsibleOnDesktop() || filament()->isSidebarFullyCollapsibleOnDesktop() || filament()->hasTopNavigation()),
+        'lg:-translate-x-full rtl:lg:translate-x-full' => filament()->hasTopNavigation(),
+    ])
     }}
 >
     <div class="overflow-x-clip">
@@ -66,7 +66,6 @@
                 <x-filament::icon-button
                     color="gray"
                     :icon="$isRtl ? 'heroicon-o-chevron-left' : 'heroicon-o-chevron-right'"
-                    {{-- @deprecated Use `panels::sidebar.expand-button.rtl` instead of `panels::sidebar.expand-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['panels::sidebar.expand-button.rtl', 'panels::sidebar.expand-button'] : 'panels::sidebar.expand-button'"
                     icon-size="lg"
                     :label="__('filament-panels::layout.actions.sidebar.expand.label')"
@@ -82,7 +81,6 @@
                 <x-filament::icon-button
                     color="gray"
                     :icon="$isRtl ? 'heroicon-o-chevron-right' : 'heroicon-o-chevron-left'"
-                    {{-- @deprecated Use `panels::sidebar.collapse-button.rtl` instead of `panels::sidebar.collapse-button` for RTL. --}}
                     :icon-alias="$isRtl ? ['panels::sidebar.collapse-button.rtl', 'panels::sidebar.collapse-button'] : 'panels::sidebar.collapse-button'"
                     icon-size="lg"
                     :label="__('filament-panels::layout.actions.sidebar.collapse.label')"
@@ -96,17 +94,26 @@
         </header>
     </div>
 
+    {{-- 
+        Scrollbar gizleme için eklenen stiller ve sınıflar:
+        - style: scrollbar-width (Firefox) ve -ms-overflow-style (IE/Edge)
+        - <style> bloğu: Webkit (Chrome, Safari) için
+    --}}
     <nav
         class="fi-sidebar-nav flex-grow flex flex-col gap-y-7 overflow-y-auto overflow-x-hidden px-6 py-8"
-        style="scrollbar-gutter: stable"
+        style="scrollbar-width: none; -ms-overflow-style: none; scrollbar-gutter: auto;"
     >
+        <style>
+            .fi-sidebar-nav::-webkit-scrollbar { display: none; }
+        </style>
+
         {{ \Filament\Support\Facades\FilamentView::renderHook(\Filament\View\PanelsRenderHook::SIDEBAR_NAV_START) }}
 
         @if (filament()->hasTenancy() && filament()->hasTenantMenu())
             <div
                 @class([
                     'fi-sidebar-nav-tenant-menu-ctn',
-                    '-mx-2' => ! filament()->isSidebarCollapsibleOnDesktop(),
+                    '-mx-2' => !filament()->isSidebarCollapsibleOnDesktop(),
                 ])
                 @if (filament()->isSidebarCollapsibleOnDesktop())
                     x-bind:class="$store.sidebar.isOpen ? '-mx-2' : '-mx-4'"
@@ -139,8 +146,8 @@
                     'collapsedGroups',
                     JSON.stringify(@js(
                         collect($navigation)
-                            ->filter(fn (\Filament\Navigation\NavigationGroup $group): bool => $group->isCollapsed())
-                            ->map(fn (\Filament\Navigation\NavigationGroup $group): string => $group->getLabel())
+                            ->filter(fn(\Filament\Navigation\NavigationGroup $group): bool => $group->isCollapsed())
+                            ->map(fn(\Filament\Navigation\NavigationGroup $group): string => $group->getLabel())
                             ->values()
                             ->all()
                     )),
@@ -160,8 +167,6 @@
                         return
                     }
 
-                    // Alpine.js loads too slow, so attempt to hide a
-                    // collapsed sidebar group earlier.
                     group.querySelector(
                         '.fi-sidebar-group-items',
                     ).style.display = 'none'

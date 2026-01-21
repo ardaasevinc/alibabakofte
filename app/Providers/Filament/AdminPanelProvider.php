@@ -41,6 +41,8 @@ class AdminPanelProvider extends PanelProvider
             ->sidebarWidth('250px')
             ->maxContentWidth('full')
             
+            ->globalSearch(true) // Command+K açılır
+        ->globalSearchKeyBindings(['meta+k', 'ctrl+k'])
 
             // --- Renk Paleti (Amber/Turuncu Köfte Temasına Uygun) ---
             ->colors([
