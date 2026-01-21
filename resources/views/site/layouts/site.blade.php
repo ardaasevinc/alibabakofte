@@ -10,7 +10,7 @@
             {{ $settings?->meta_title ?? 'Meşhur Çatalcalı Ali Baba Köfte Salonu | 1997\'den Beri Gelen Lezzet' }}
         @endif
     </title>
-
+    <meta name="facebook-domain-verification" content="5evuw3kv4nmwq9w466zked48jo6md7" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <meta name="description"
