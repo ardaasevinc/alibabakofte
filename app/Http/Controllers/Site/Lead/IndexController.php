@@ -34,7 +34,7 @@ class IndexController extends Controller
     {
         $userAgent = request()->userAgent();
 
-        // 1) BOT / SERVER-SIDE (Guzzle, curl, bot vs.) İSTEKLERİ ELE
+        // 1) BOT / SERVER-SIDE (Guzzle, curl, bot vs.) filtreleme
         if (
             ! $userAgent ||
             str_contains($userAgent, 'GuzzleHttp') ||
@@ -56,20 +56,19 @@ class IndexController extends Controller
         $fbc         = MetaCapiService::getFormattedFbc();
         $browserId   = Cookie::get('browser_id');
 
-        // Kaynak URL
+        // Kaynak URL & UTM çözümleme
         $previousUrl = request()->headers->get('referer') ?? url()->previous() ?? url('/');
         $referer     = request()->headers->get('referer');
         $urlData     = parse_url($previousUrl);
         parse_str($urlData['query'] ?? '', $qs);
 
-        // 2) 24 SAAT İÇİNDE AYNI CİHAZ + AYNI TYPE İÇİN TEK LEAD
+        // 24 saat içinde aynı device + aynı type lead limit
         $exists = Lead::where('type', $type)
             ->where('device_id', $deviceId)
             ->where('created_at', '>', now()->subHours(24))
             ->exists();
 
         if ($exists) {
-            // Zaten lead varsa: ne DB ne CAPI
             return redirect()->to($targetUrl);
         }
 
@@ -104,10 +103,19 @@ class IndexController extends Controller
                 ],
             ]);
 
-            // CAPI EVENT (2. Katman - Lead)
+            /**
+             * CAPI EVENT GÖNDERİMİ
+             * Ülke bilgisi: TR (sabit)
+             */
             MetaCapiService::sendEvent('Lead', [
-                'lead_id' => $lead->id,
-                'type'    => $type,
+                'lead_id'   => $lead->id,
+                'type'      => $type,
+
+                // Advanced Matching için
+                'device_id' => $deviceId,
+                'fbp'       => $fbp,
+                'fbc'       => $fbc,
+                'country'   => 'tr',  // >>> EKLENDİ <<<
             ], $eventId);
 
         } catch (\Exception $e) {
