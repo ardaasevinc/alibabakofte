@@ -26,12 +26,16 @@ class LeadResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema([]); // Manual create yok
+        return $form->schema([]); // Manuel create yok
     }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
+
+            /* ============================================================
+             |  DÖNÜŞÜM ÖZETİ
+             ============================================================ */
             Section::make('Dönüşüm Özeti')
                 ->schema([
                     Grid::make(4)->schema([
@@ -68,6 +72,9 @@ class LeadResource extends Resource
                     ]),
                 ]),
 
+            /* ============================================================
+             |  META CAPI PARAMETRELERİ
+             ============================================================ */
             Section::make('Meta CAPI Parametreleri')
                 ->collapsible()
                 ->collapsed()
@@ -83,9 +90,7 @@ class LeadResource extends Resource
                             ->label('FBCLID')
                             ->copyable()
                             ->placeholder('-')
-                            ->color(fn($state) =>
-                                $state ? 'success' : 'gray'
-                            ),
+                            ->color(fn($state) => $state ? 'success' : 'gray'),
 
                         TextEntry::make('fbc')
                             ->label('FBC')
@@ -108,14 +113,18 @@ class LeadResource extends Resource
                             ->copyable()
                             ->columnSpanFull()
                             ->fontFamily('mono'),
-                    ])
+                    ]),
                 ]),
 
-            Section::make('Ziyaretçi Teknİk Verileri')
+            /* ============================================================
+             |  TEKNİK VERİLER
+             ============================================================ */
+            Section::make('Ziyaretçi Teknik Verileri')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
+
                         TextEntry::make('ip_address')
                             ->label('IP')
                             ->icon('heroicon-m-globe-alt'),
@@ -123,7 +132,6 @@ class LeadResource extends Resource
                         TextEntry::make('browser_id')
                             ->label('Browser ID')
                             ->copyable()
-                            ->placeholder('-')
                             ->fontFamily('mono'),
 
                         TextEntry::make('referer')
@@ -136,9 +144,12 @@ class LeadResource extends Resource
                             ->url(fn($state) => $state)
                             ->openUrlInNewTab()
                             ->columnSpanFull(),
-                    ])
+                    ]),
                 ]),
 
+            /* ============================================================
+             |  PAYLOAD
+             ============================================================ */
             Section::make('Payload')
                 ->collapsible()
                 ->collapsed()
@@ -152,13 +163,16 @@ class LeadResource extends Resource
                         )
                         ->copyable()
                         ->extraAttributes([
-                            'class' => 'whitespace-pre-wrap text-xs font-mono'
+                            'class' => 'whitespace-pre-wrap text-xs font-mono',
                         ])
                         ->columnSpanFull(),
                 ]),
         ]);
     }
 
+    /* ============================================================
+     |  TABLE
+     ============================================================ */
     public static function table(Table $table): Table
     {
         return $table
@@ -186,7 +200,7 @@ class LeadResource extends Resource
                     ->searchable(),
 
                 TextColumn::make('fbclid')
-                    ->label('Reklam')
+                    ->label('Reklam Kaynağı')
                     ->formatStateUsing(fn($state) =>
                         $state ? 'Meta Ads' : 'Organik'
                     )
@@ -199,6 +213,7 @@ class LeadResource extends Resource
                     ->label('IP')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->filters([])
             ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -209,6 +224,9 @@ class LeadResource extends Resource
             ]);
     }
 
+    /* ============================================================
+     |  PAGES
+     ============================================================ */
     public static function getPages(): array
     {
         return [

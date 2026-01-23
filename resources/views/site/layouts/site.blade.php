@@ -69,6 +69,8 @@
         fbq('init', '{{ $settings->facebook_pixel_code }}');
         fbq('track', 'PageView');
     </script>
+
+    
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
