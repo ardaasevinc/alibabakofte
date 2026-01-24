@@ -26,7 +26,7 @@ class LeadResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema([]); // Manual create yok
+        return $form->schema([]);
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -34,7 +34,7 @@ class LeadResource extends Resource
         return $infolist->schema([
 
             /* ============================================================
-             |  DÖNÜŞÜM ÖZETİ (type, zaman, kaynak)
+             |  DÖNÜŞÜM ÖZETİ
              ============================================================ */
             Section::make('Dönüşüm Özeti')
                 ->schema([
@@ -43,31 +43,23 @@ class LeadResource extends Resource
                         TextEntry::make('type')
                             ->label('Dönüşüm Tipi')
                             ->badge()
-                            ->icon(
-                                fn($state) =>
-                                $state === 'whatsapp'
+                            ->icon(fn($state) => $state === 'whatsapp'
                                 ? 'heroicon-m-chat-bubble-left-right'
-                                : 'heroicon-m-list-bullet'
-                            )
-                            ->color(
-                                fn($state) =>
-                                $state === 'whatsapp' ? 'success' : 'warning'
-                            )
-                            ->formatStateUsing(
-                                fn($state) =>
-                                $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
-                            ),
+                                : 'heroicon-m-list-bullet')
+                            ->color(fn($state) => $state === 'whatsapp' ? 'success' : 'warning')
+                            ->formatStateUsing(fn($state) => $state === 'whatsapp' ? 'WhatsApp' : 'Menü'),
 
                         TextEntry::make('utm_source')
                             ->label('Kaynak')
                             ->badge()
-                            ->placeholder('Direct / Organik')
-                            ->color('info'),
+                            ->color('info')
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                         TextEntry::make('utm_campaign')
                             ->label('Kampanya')
                             ->placeholder('-')
-                            ->weight(FontWeight::SemiBold),
+                            ->weight(FontWeight::SemiBold)
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                         TextEntry::make('created_at')
                             ->label('Tarih')
@@ -76,7 +68,7 @@ class LeadResource extends Resource
                 ]),
 
             /* ============================================================
-             |  TRAFİK PARAMETRELERİ (utm’ler, fbclid, gclid)
+             |  TRAFİK PARAMETRELERİ
              ============================================================ */
             Section::make('Trafik Parametreleri')
                 ->collapsible()
@@ -87,33 +79,33 @@ class LeadResource extends Resource
                         TextEntry::make('utm_source')
                             ->label('utm_source')
                             ->badge()
-                            ->color('info'),
+                            ->color('info')
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                         TextEntry::make('utm_medium')
                             ->label('utm_medium')
                             ->badge()
-                            ->color('info'),
+                            ->color('info')
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                         TextEntry::make('utm_campaign')
                             ->label('utm_campaign')
                             ->badge()
-                            ->color('info'),
+                            ->color('info')
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                         TextEntry::make('fbclid')
-                            ->label('fbclid')
                             ->copyable()
                             ->color(fn($state) => $state ? 'success' : 'gray'),
 
                         TextEntry::make('gclid')
-                            ->label('gclid')
                             ->copyable()
                             ->color(fn($state) => $state ? 'warning' : 'gray'),
-
                     ]),
                 ]),
 
             /* ============================================================
-             |  META CAPI PARAMETRELERİ (event_id, fbp, fbc vs.)
+             |  META CAPI PARAMETRELERİ
              ============================================================ */
             Section::make('Meta CAPI Parametreleri')
                 ->collapsible()
@@ -122,41 +114,35 @@ class LeadResource extends Resource
                     Grid::make(2)->schema([
 
                         TextEntry::make('event_id')
-                            ->label('Event ID')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('fbc')
-                            ->label('FBC')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('fbp')
-                            ->label('FBP')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('browser_id')
-                            ->label('Browser ID')
                             ->copyable()
                             ->fontFamily('mono'),
 
                         TextEntry::make('device_id')
-                            ->label('Device ID')
                             ->copyable()
-                            ->columnSpanFull()
-                            ->fontFamily('mono'),
+                            ->fontFamily('mono')
+                            ->columnSpanFull(),
 
                         TextEntry::make('session_hash')
-                            ->label('Session Hash')
                             ->copyable()
-                            ->columnSpanFull()
-                            ->fontFamily('mono'),
+                            ->fontFamily('mono')
+                            ->columnSpanFull(),
                     ]),
                 ]),
 
             /* ============================================================
-             |  ZİYARETÇİ TEKNİK VERİLERİ
+             |  CİHAZ VE TEKNİK VERİLER
              ============================================================ */
             Section::make('Cihaz ve Teknik Veriler')
                 ->collapsible()
@@ -165,67 +151,55 @@ class LeadResource extends Resource
                     Grid::make(3)->schema([
 
                         TextEntry::make('ip_address')
-                            ->label('IP Adresi')
-                            ->icon('heroicon-m-globe-alt'),
+                            ->label('IP Adresi'),
 
                         TextEntry::make('platform')
-                            ->label('Platform')
                             ->badge()
-                            ->color('primary')
-                            ->formatStateUsing(fn($state) => ucfirst($state)),
+                            ->color('primary'),
 
                         TextEntry::make('is_mobile')
-                            ->label('Cihaz Türü')
                             ->badge()
                             ->color(fn($state) => $state ? 'success' : 'gray')
-                            ->formatStateUsing(
-                                fn($state) =>
-                                $state ? 'Mobil' : 'Desktop'
-                            ),
+                            ->formatStateUsing(fn($state) => $state ? 'Mobil' : 'Desktop'),
 
                         TextEntry::make('referer')
-                            ->label('Referer')
-                            ->placeholder('-')
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                         TextEntry::make('landing_page')
-                            ->label('Geldiği URL')
-                            ->url(fn($state) => $state)
+                            ->columnSpanFull()
+                            ->url(fn($state) => is_string($state) ? $state : null)
                             ->openUrlInNewTab()
-                            ->columnSpanFull(),
+                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
                     ]),
                 ]),
 
             /* ============================================================
-             |  PAYLOAD JSON
+             |  PAYLOAD JSON — FİLAMENT 3.3 UYUMLU
              ============================================================ */
-            /* ============================================================
- |  PAYLOAD
- ============================================================ */
             Section::make('Payload')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
                     TextEntry::make('payload')
                         ->label('Payload JSON')
-                        ->formatStateUsing(
-                            fn($state) =>
-                            blank($state)
-                            ? 'Ek veri yok'
-                            : json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-                        )
+                        ->formatStateUsing(fn($state) => json_encode($state, JSON_PRETTY_PRINT))
                         ->copyable()
+                        ->columnSpanFull()
                         ->extraAttributes([
-                            'class' => 'whitespace-pre-wrap text-xs font-mono',
-                        ])
-                        ->columnSpanFull(),
+                            'style' =>
+                                'white-space: pre-wrap;
+                                 font-family: monospace;
+                                 font-size: 14px;
+                                 background:#0f0f0f;
+                                 color:#eee;
+                                 padding:16px;
+                                 border-radius:8px;'
+                        ]),
                 ]),
         ]);
     }
 
-    /* ============================================================
-     |  TABLE
-     ============================================================ */
     public static function table(Table $table): Table
     {
         return $table
@@ -239,49 +213,28 @@ class LeadResource extends Resource
                 TextColumn::make('type')
                     ->label('Eylem')
                     ->badge()
-                    ->formatStateUsing(
-                        fn($state) =>
-                        $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
-                    )
-                    ->color(
-                        fn($state) =>
-                        $state === 'whatsapp' ? 'success' : 'warning'
-                    ),
+                    ->formatStateUsing(fn($state) => $state === 'whatsapp' ? 'WhatsApp' : 'Menü')
+                    ->color(fn($state) => $state === 'whatsapp' ? 'success' : 'warning'),
 
                 TextColumn::make('utm_source')
                     ->label('Kaynak')
                     ->badge()
                     ->color('info')
-                    ->searchable(),
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
 
                 TextColumn::make('fbclid')
                     ->label('Reklam')
-                    ->formatStateUsing(
-                        fn($state) =>
-                        $state ? 'Meta Ads' : 'Organik'
-                    )
+                    ->formatStateUsing(fn($state) => $state ? 'Meta Ads' : 'Organik')
                     ->badge()
-                    ->color(
-                        fn($state) =>
-                        $state ? 'success' : 'gray'
-                    ),
-
-                TextColumn::make('ip_address')
-                    ->label('IP')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->copyable(),
+                    ->color(fn($state) => $state ? 'success' : 'gray'),
             ])
             ->defaultSort('created_at', 'desc')
-            ->filters([])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-            ])
-            ->bulkActions([]);
+            ]);
     }
 
-    /* ============================================================
-     |  PAGES
-     ============================================================ */
     public static function getPages(): array
     {
         return [
