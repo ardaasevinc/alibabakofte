@@ -2,115 +2,62 @@
 
 namespace App\Services;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Support\Facades\Cookie;
-use Illuminate\Support\Facades\Request as RequestFacade;
 use Illuminate\Support\Str;
 
 class MetaCapiService
 {
     /**
-     * Meta Event Gönderimi
-     *
-     * @param  string      $eventName
-     * @param  array       $customData  Lead / PageView vb. özel datalar
-     * @param  string|null $eventId     Deduplication için event_id
+     * Trafik verilerini 1 kez yakala (utm, fbclid, fbp)
      */
-    public static function sendEvent(string $eventName, array $customData = [], ?string $eventId = null): void
+    public static function captureTrafficDataOnce(Request $request): void
     {
-        $pixelId     = config('services.meta.pixel_id');
-        $accessToken = config('services.meta.access_token');
-
-        if (! $pixelId || ! $accessToken) {
-            Log::warning('Meta CAPI: Pixel ID veya Access Token tanımlı değil.');
-            return;
+        if ($request->has('fbclid') && ! Session::has('fbclid')) {
+            Session::put('fbclid', $request->query('fbclid'));
         }
 
-        // Trafik verilerini (utm, fbclid, fbp) Session'a yaz
-        self::captureTrafficDataOnce();
-
-        $eventId ??= self::generateEventId();
-
-        // Advanced Matching alanları
-        $deviceId = self::getOrCreateDeviceId();
-        $fbp = self::getOrCreateFbp();
-        $fbc = self::getFormattedFbc();
-        $browserId = Cookie::get('browser_id');
-
-        $event = [
-            'event_name'       => $eventName,
-            'event_time'       => now()->timestamp,
-            'event_id'         => $eventId,
-            'action_source'    => 'website',
-            'event_source_url' => RequestFacade::fullUrl(),
-
-            'user_data' => array_filter([
-                'client_ip_address' => RequestFacade::ip(),
-                'client_user_agent' => RequestFacade::userAgent(),
-                'fbp' => $fbp,
-                'fbc' => $fbc,
-
-                // Session + Device üzerinden güçlü deduplikasyon / advanced matching
-                'external_id'       => hash('sha256', Session::getId()),
-                'subscription_id' => hash('sha256', $deviceId),
-                'browser_id' => $browserId,
-                'country'           => 'tr',
-            ]),
-
-            'custom_data' => $customData,
-        ];
-
-        $payload = [
-            'data' => [$event],
-        ];
-
-        // Test modu açıksa test_event_code ekle
-        if ($testCode = config('services.meta.test_code')) {
-            $payload['test_event_code'] = $testCode;
-        }
-
-        try {
-            $response = Http::withToken($accessToken)
-                ->post("https://graph.facebook.com/v21.0/{$pixelId}/events", $payload);
-
-            $status = $response->status();
-
-            // 200–299 dışındaki tüm durumları hata olarak logla
-            if ($status < 200 || $status > 300) {
-                Log::error('Meta CAPI Error Response', [
-                    'status' => $status,
-                    'body' => $response->body(),
-                    'payload' => $payload,
-                ]);
+        foreach (['utm_source','utm_medium','utm_campaign','utm_term','utm_content'] as $utm) {
+            if ($request->has($utm) && ! Session::has($utm)) {
+                Session::put($utm, $request->query($utm));
             }
-        } catch (\Throwable $e) {
-            Log::error('Meta CAPI Exception: ' . $e->getMessage(), [
-                'payload' => $payload,
-            ]);
         }
 
+        if ($request->cookie('_fbp') && ! Session::has('_fbp')) {
+            Session::put('_fbp', $request->cookie('_fbp'));
+        }
     }
 
+
     /**
-     * Event ID üretimi (deduplication için)
+     * External ID
      */
-    public static function generateEventId(): string
+    public static function getOrCreateExternalId(Request $request): string
     {
-        return 'evt_' . Str::random(12) . '_' . now()->timestamp;
+        $cookie = $request->cookie('external_id');
+
+        if (! $cookie) {
+            $id = base64_encode(now()->timestamp . '_' . Str::random(16));
+            Cookie::queue('external_id', $id, 60 * 24 * 365);
+            return $id;
+        }
+
+        return $cookie;
     }
 
+
     /**
-     * Cihaz ID'si (cookie üzerinden)
+     * Device ID
      */
     public static function getOrCreateDeviceId(): string
     {
         $cookie = Cookie::get('device_id');
 
         if (! $cookie) {
-            $id = Str::uuid()->toString();
-            // 1 yıl
+            $id = (string) Str::uuid();
             Cookie::queue('device_id', $id, 60 * 24 * 365);
             return $id;
         }
@@ -118,77 +65,140 @@ class MetaCapiService
         return $cookie;
     }
 
+
     /**
-     * Browser ID (ek bir kimlik, advanced matching için)
+     * Browser ID
      */
     public static function getOrCreateBrowserId(): string
     {
-        $id = Cookie::get('browser_id');
+        $cookie = Cookie::get('browser_id');
 
-        if (!$id) {
+        if (! $cookie) {
             $id = 'br_' . Str::random(24);
             Cookie::queue('browser_id', $id, 60 * 24 * 365);
+            return $id;
         }
 
-        return $id;
+        return $cookie;
     }
 
-    /**
-     * Session hash (external_id için kullanılabilir)
-     */
-    public static function getSessionHash(): string
-    {
-        return hash('sha256', Session::getId());
-    }
 
     /**
-     * FBP cookie (Facebook Browser ID)
+     * FBP
      */
-    public static function getOrCreateFbp(): string
+    public static function getOrCreateFbp(Request $request): string
     {
-        $cookie = Cookie::get('_fbp');
+        $cookie = $request->cookie('_fbp');
 
         if (! $cookie) {
             $fbp = 'fb.1.' . now()->timestamp . '.' . mt_rand(1000000000, 9999999999);
-            Cookie::queue('_fbp', $fbp, 60 * 24 * 365); // 1 yıl
-            Session::put('_fbp', $fbp);
-
+            Cookie::queue('_fbp', $fbp, 60 * 24 * 365);
             return $fbp;
         }
 
         return $cookie;
     }
 
-    /**
-     * FBC parametresi (reklam tıklaması varsa)
-     */
-    public static function getFormattedFbc(): ?string
-    {
-        $fbclid = RequestFacade::query('fbclid') ?? Session::get('meta_fbclid');
 
-        return $fbclid ? 'fb.1.' . now()->timestamp . '.' . $fbclid : null;
+    /**
+     * FBC
+     */
+    public static function getFormattedFbc(Request $request): ?string
+    {
+        $fbclid = $request->query('fbclid') ?? Session::get('fbclid');
+
+        return $fbclid
+            ? 'fb.1.' . now()->timestamp . '.' . $fbclid
+            : null;
     }
 
+
     /**
-     * Trafik verilerini (utm, fbclid, fbp) 1 kez yakala ve Session'a yaz
+     * Platform (iOS / Android / Desktop)
      */
-    public static function captureTrafficDataOnce(): void
+    public static function detectPlatform(string $ua): string
     {
-        // fbclid
-        if (RequestFacade::has('fbclid') && !Session::has('meta_fbclid')) {
-            Session::put('meta_fbclid', RequestFacade::query('fbclid'));
+        $ua = strtolower($ua);
+
+        return match (true) {
+            str_contains($ua, 'iphone'),
+            str_contains($ua, 'ipad')  => 'iOS',
+
+            str_contains($ua, 'android') => 'Android',
+
+            default => 'Desktop'
+        };
+    }
+
+
+    /**
+     * Cihaz mobil mi?
+     */
+    public static function isMobileDevice(string $ua): bool
+    {
+        $ua = strtolower($ua);
+
+        return str_contains($ua, 'iphone')
+            || str_contains($ua, 'android')
+            || str_contains($ua, 'ipad')
+            || str_contains($ua, 'mobile');
+    }
+
+
+    /**
+     * Event ID
+     */
+    public static function generateEventId(): string
+    {
+        return 'evt_' . Str::random(12) . '_' . now()->timestamp;
+    }
+
+
+    /**
+     * CAPI request
+     */
+    public static function sendEvent(string $eventName, array $customData = [], ?string $eventId = null): void
+    {
+        $pixelId     = config('services.meta.pixel_id');
+        $accessToken = config('services.meta.access_token');
+
+        if (! $pixelId || ! $accessToken) {
+            return;
         }
 
-        // UTM'ler
-        if (RequestFacade::has('utm_source') && !Session::has('utm_source')) {
-            Session::put('utm_source', RequestFacade::query('utm_source'));
-            Session::put('utm_campaign', RequestFacade::query('utm_campaign'));
-            Session::put('utm_medium', RequestFacade::query('utm_medium'));
-        }
+        $request     = request();
+        $eventId   ??= self::generateEventId();
 
-        // FBP cookie'den session'a
-        if (RequestFacade::cookie('_fbp') && !Session::has('_fbp')) {
-            Session::put('_fbp', RequestFacade::cookie('_fbp'));
+        $payload = [
+            'data' => [
+                [
+                    'event_name'       => $eventName,
+                    'event_time'       => time(),
+                    'event_id'         => $eventId,
+                    'action_source'    => 'website',
+                    'event_source_url' => $request->fullUrl(),
+
+                    'user_data' => array_filter([
+                        'client_ip_address' => $request->ip(),
+                        'client_user_agent' => $request->userAgent(),
+                        'fbp'               => self::getOrCreateFbp($request),
+                        'fbc'               => self::getFormattedFbc($request),
+                        'external_id'       => hash('sha256', self::getOrCreateExternalId($request)),
+                        'subscription_id'   => hash('sha256', self::getOrCreateDeviceId()),
+                        'browser_id'        => hash('sha256', self::getOrCreateBrowserId()),
+                        'country'           => 'tr',
+                    ]),
+
+                    'custom_data' => $customData,
+                ],
+            ],
+        ];
+
+        try {
+            Http::withToken($accessToken)
+                ->post("https://graph.facebook.com/v21.0/{$pixelId}/events", $payload);
+        } catch (\Throwable $e) {
+            Log::error('MetaCapi Error', ['error' => $e->getMessage()]);
         }
     }
 }

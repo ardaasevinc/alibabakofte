@@ -26,7 +26,7 @@ class LeadResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form->schema([]); // Manuel create yok
+        return $form->schema([]); // Manual create yok
     }
 
     public static function infolist(Infolist $infolist): Infolist
@@ -34,7 +34,7 @@ class LeadResource extends Resource
         return $infolist->schema([
 
             /* ============================================================
-             |  DÖNÜŞÜM ÖZETİ
+             |  DÖNÜŞÜM ÖZETİ (type, zaman, kaynak)
              ============================================================ */
             Section::make('Dönüşüm Özeti')
                 ->schema([
@@ -73,7 +73,44 @@ class LeadResource extends Resource
                 ]),
 
             /* ============================================================
-             |  META CAPI PARAMETRELERİ
+             |  TRAFİK PARAMETRELERİ (utm’ler, fbclid, gclid)
+             ============================================================ */
+            Section::make('Trafik Parametreleri')
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    Grid::make(3)->schema([
+
+                        TextEntry::make('utm_source')
+                            ->label('utm_source')
+                            ->badge()
+                            ->color('info'),
+
+                        TextEntry::make('utm_medium')
+                            ->label('utm_medium')
+                            ->badge()
+                            ->color('info'),
+
+                        TextEntry::make('utm_campaign')
+                            ->label('utm_campaign')
+                            ->badge()
+                            ->color('info'),
+
+                        TextEntry::make('fbclid')
+                            ->label('fbclid')
+                            ->copyable()
+                            ->color(fn($state) => $state ? 'success' : 'gray'),
+
+                        TextEntry::make('gclid')
+                            ->label('gclid')
+                            ->copyable()
+                            ->color(fn($state) => $state ? 'warning' : 'gray'),
+
+                    ]),
+                ]),
+
+            /* ============================================================
+             |  META CAPI PARAMETRELERİ (event_id, fbp, fbc vs.)
              ============================================================ */
             Section::make('Meta CAPI Parametreleri')
                 ->collapsible()
@@ -86,12 +123,6 @@ class LeadResource extends Resource
                             ->copyable()
                             ->fontFamily('mono'),
 
-                        TextEntry::make('fbclid')
-                            ->label('FBCLID')
-                            ->copyable()
-                            ->placeholder('-')
-                            ->color(fn($state) => $state ? 'success' : 'gray'),
-
                         TextEntry::make('fbc')
                             ->label('FBC')
                             ->copyable()
@@ -99,6 +130,11 @@ class LeadResource extends Resource
 
                         TextEntry::make('fbp')
                             ->label('FBP')
+                            ->copyable()
+                            ->fontFamily('mono'),
+
+                        TextEntry::make('browser_id')
+                            ->label('Browser ID')
                             ->copyable()
                             ->fontFamily('mono'),
 
@@ -117,22 +153,31 @@ class LeadResource extends Resource
                 ]),
 
             /* ============================================================
-             |  TEKNİK VERİLER
+             |  ZİYARETÇİ TEKNİK VERİLERİ
              ============================================================ */
-            Section::make('Ziyaretçi Teknik Verileri')
+            Section::make('Cihaz ve Teknik Veriler')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
 
                         TextEntry::make('ip_address')
-                            ->label('IP')
+                            ->label('IP Adresi')
                             ->icon('heroicon-m-globe-alt'),
 
-                        TextEntry::make('browser_id')
-                            ->label('Browser ID')
-                            ->copyable()
-                            ->fontFamily('mono'),
+                        TextEntry::make('platform')
+                            ->label('Platform')
+                            ->badge()
+                            ->color('primary')
+                            ->formatStateUsing(fn($state) => ucfirst($state)),
+
+                        TextEntry::make('is_mobile')
+                            ->label('Cihaz Türü')
+                            ->badge()
+                            ->color(fn($state) => $state ? 'success' : 'gray')
+                            ->formatStateUsing(fn($state) =>
+                                $state ? 'Mobil' : 'Desktop'
+                            ),
 
                         TextEntry::make('referer')
                             ->label('Referer')
@@ -140,7 +185,7 @@ class LeadResource extends Resource
                             ->columnSpanFull(),
 
                         TextEntry::make('landing_page')
-                            ->label('Geldiği Sayfa')
+                            ->label('Geldiği URL')
                             ->url(fn($state) => $state)
                             ->openUrlInNewTab()
                             ->columnSpanFull(),
@@ -148,14 +193,14 @@ class LeadResource extends Resource
                 ]),
 
             /* ============================================================
-             |  PAYLOAD
+             |  PAYLOAD JSON
              ============================================================ */
-            Section::make('Payload')
+            Section::make('Payload JSON')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
                     TextEntry::make('payload')
-                        ->label('Payload JSON')
+                        ->label('Payload')
                         ->formatStateUsing(fn($state) =>
                             blank($state)
                                 ? 'Ek veri yok'
@@ -163,7 +208,7 @@ class LeadResource extends Resource
                         )
                         ->copyable()
                         ->extraAttributes([
-                            'class' => 'whitespace-pre-wrap text-xs font-mono',
+                            'class' => 'whitespace-pre-wrap text-xs font-mono bg-gray-100 dark:bg-gray-900 p-3 rounded-lg',
                         ])
                         ->columnSpanFull(),
                 ]),
@@ -200,7 +245,7 @@ class LeadResource extends Resource
                     ->searchable(),
 
                 TextColumn::make('fbclid')
-                    ->label('Reklam Kaynağı')
+                    ->label('Reklam')
                     ->formatStateUsing(fn($state) =>
                         $state ? 'Meta Ads' : 'Organik'
                     )
@@ -211,17 +256,15 @@ class LeadResource extends Resource
 
                 TextColumn::make('ip_address')
                     ->label('IP')
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->copyable(),
             ])
-            ->filters([])
             ->defaultSort('created_at', 'desc')
+            ->filters([])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\DeleteBulkAction::make(),
-            ]);
+            ->bulkActions([]);
     }
 
     /* ============================================================
@@ -231,7 +274,7 @@ class LeadResource extends Resource
     {
         return [
             'index' => Pages\ListLeads::route('/'),
-            'view' => Pages\ViewLead::route('/{record}'),
+            'view'  => Pages\ViewLead::route('/{record}'),
         ];
     }
 }

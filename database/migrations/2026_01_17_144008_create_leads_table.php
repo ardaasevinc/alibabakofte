@@ -6,50 +6,78 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
-  public function up()
-{
-    Schema::create('leads', function (Blueprint $table) {
-        $table->id();
+    public function up(): void
+    {
+        Schema::create('leads', function (Blueprint $table) {
+            $table->id();
 
-        // Lead Kaynağı
-        $table->string('type')->index();            // whatsapp, menu, vb.
-        $table->string('event_id')->unique();       // deduplication
-        $table->string('event_name')->nullable();   // Lead, ViewContent vb.
+            /* ============================================================
+             * 1) Kullanıcı / Oturum Bilgileri
+             * ============================================================ */
+            $table->string('external_id')->nullable()->index();   // benzersiz kullanıcı (cookie)
+            $table->string('session_id')->nullable()->index();    // Laravel session ID
 
-        // Traffic Source
-        $table->string('utm_source')->nullable();
-        $table->string('utm_campaign')->nullable();
-        $table->string('utm_medium')->nullable();
-        $table->string('fbclid')->nullable();
-        $table->string('gclid')->nullable();
+            /* ============================================================
+             * 2) Meta Deduplication
+             * ============================================================ */
+            $table->string('event_id')->unique()->index();        // Pixel <-> CAPI eşleşmesi
+            $table->string('event_name')->default('Lead')->index();
 
-        // Device & Session
-        $table->string('device_id')->nullable();           // hashed device id
-        $table->string('session_hash')->nullable();        // hashed session id
-        $table->string('fbp')->nullable();                 // meta browser id
-        $table->string('fbc')->nullable();
-        $table->string('browser_id')->nullable();          // client fingerprint
+            /* ============================================================
+             * 3) Kaynak (Buton / Event Türü)
+             * ============================================================ */
+            $table->string('type')->index();                      // whatsapp, menu, rezervasyon vb.
+            $table->string('button_id')->nullable()->index();     // meta-whatsapp, meta-menu
 
-        // Technical Client Info
-        $table->string('ip_address')->nullable();
-        $table->text('user_agent')->nullable();
-        $table->string('referer')->nullable();
-        $table->string('landing_page')->nullable();
+            /* ============================================================
+             * 4) Trafik Kaynağı / Reklam Verileri
+             * ============================================================ */
+            $table->string('utm_source')->nullable()->index();
+            $table->string('utm_medium')->nullable()->index();
+            $table->string('utm_campaign')->nullable()->index();
+            $table->string('utm_term')->nullable();
+            $table->string('utm_content')->nullable();
 
-        // Extra data
-        $table->json('payload')->nullable();
+            $table->string('fbclid')->nullable()->index();        // Facebook click id
+            $table->string('gclid')->nullable()->index();         // Google Ads click id
 
-        $table->timestamps();
-    });
-}
+            /* ============================================================
+             * 5) Meta Browser IDs
+             * ============================================================ */
+            $table->string('fbp')->nullable()->index();           // _fbp
+            $table->string('fbc')->nullable()->index();           // _fbc
 
+            /* ============================================================
+             * 6) Kullanıcı Teknik Bilgileri
+             * ============================================================ */
+            $table->string('ip_address')->nullable()->index();
+            $table->text('user_agent')->nullable();
+            $table->string('platform')->nullable();               // iOS / Android / Desktop
+            $table->boolean('is_mobile')->default(false);
 
-    /**
-     * Reverse the migrations.
-     */
+            /* ============================================================
+             * 7) URL Bilgileri
+             * ============================================================ */
+            $table->string('came_from_url')->nullable();          // kullanıcının geldiği sayfa
+            $table->string('event_source_url')->nullable();       // Meta CAPI'ye gönderilen temiz URL
+            $table->string('landing_page')->nullable();           // ilk giriş yaptığı sayfa
+            $table->string('referer')->nullable();                // HTTP referer
+
+            /* ============================================================
+             * 8) Ekstra JSON Alanları
+             * ============================================================ */
+            $table->json('payload')->nullable();                  // cihaz bilgileri, dil, saat dilimi vb.
+
+            /* ============================================================
+             * 9) Meta Cevap Logları
+             * ============================================================ */
+            $table->json('meta_request')->nullable();             // Meta'ya gönderilen JSON
+            $table->json('meta_response')->nullable();            // Meta'dan dönen JSON
+
+            $table->timestamps();
+        });
+    }
+
     public function down(): void
     {
         Schema::dropIfExists('leads');

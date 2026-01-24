@@ -9,37 +9,119 @@ use Illuminate\Support\Carbon;
 
 class MetaConversionStats extends BaseWidget
 {
-    // Widget'ın her 15 saniyede bir kendini yenilemesini sağlar (Canlı takip)
-    protected static ?string $pollingInterval = '15s';
+    protected static ?string $pollingInterval = '15s'; // canlı yenileme
 
     protected function getStats(): array
     {
         $today = Carbon::today();
-        $yesterday = Carbon::yesterday();
+        $weekAgo = Carbon::now()->subDays(7);
+        $monthAgo = Carbon::now()->subDays(30);
+
+        /* =====================================================================
+         |  GÜN SONU DEĞERLERİ
+         ===================================================================== */
+        $todayWhatsApp = Lead::type('whatsapp')->whereDate('created_at', $today)->count();
+        $todayMenu = Lead::type('menu')->whereDate('created_at', $today)->count();
+        $todayAds = Lead::whereNotNull('fbclid')->whereDate('created_at', $today)->count();
+
+        /* =====================================================================
+         |  7 GÜNLÜK (WEEKLY) GRAFİK VERİSİ
+         ===================================================================== */
+        $weeklyWhatsApp = $this->buildDailyChart('whatsapp', $weekAgo);
+        $weeklyMenu = $this->buildDailyChart('menu', $weekAgo);
+        $weeklyAds = $this->buildDailyChartForAds($weekAgo);
+
+        /* =====================================================================
+         |  30 GÜNLÜK (MONTHLY) GRAFİK VERİSİ
+         ===================================================================== */
+        $monthlyWhatsApp = $this->buildDailyChart('whatsapp', $monthAgo);
+        $monthlyMenu = $this->buildDailyChart('menu', $monthAgo);
+        $monthlyAds = $this->buildDailyChartForAds($monthAgo);
 
         return [
-            
-            Stat::make('WhatsApp İletişim', Lead::where('type', 'whatsapp')->whereDate('created_at', $today)->count())
-                ->description('Bugün gelen talepler')
+
+            /* ============================================================
+             |  WHATSAPP
+             ============================================================ */
+            Stat::make('WhatsApp Tıklamaları (Bugün)', $todayWhatsApp)
+                ->description('7 Günlük & 30 Günlük Grafik Dahil')
                 ->descriptionIcon('heroicon-m-chat-bubble-left-right')
-                ->chart(Lead::where('type', 'whatsapp')->where('created_at', '>=', now()->subDays(7))->pluck('id')->toArray()) // Küçük bir grafik çizgisi
-                ->color('success'),
+                ->color('success')
+                ->chart($weeklyWhatsApp), // 7 günlük çizgi
+            Stat::make('WhatsApp 7 Günlük Trend', '')
+                ->chart($weeklyWhatsApp)
+                ->color('success')
+                ->extraAttributes(['class' => 'border-t']),
 
-            // 2. Menü Görüntüleme (PWA)
-            Stat::make('Menü Tıklaması', Lead::where('type', 'menu')->whereDate('created_at', $today)->count())
-                ->description('Bugün menüyü açanlar')
+            Stat::make('WhatsApp 30 Günlük Trend', '')
+                ->chart($monthlyWhatsApp)
+                ->color('success')
+                ->extraAttributes(['class' => 'border-t']),
+
+            /* ============================================================
+             |  MENÜ
+             ============================================================ */
+            Stat::make('Menü Tıklamaları (Bugün)', $todayMenu)
+                ->description('7 Günlük & 30 Günlük Grafik Dahil')
                 ->descriptionIcon('heroicon-m-document-text')
-                ->color('warning'),
+                ->color('warning')
+                ->chart($weeklyMenu),
+            Stat::make('Menü 7 Günlük Trend', '')
+                ->chart($weeklyMenu)
+                ->color('warning')
+                ->extraAttributes(['class' => 'border-t']),
 
-            // 3. Reklam Verimi (FBC Parametresi olanlar)
-            Stat::make('Reklam Tıklamaları', Lead::whereNotNull('fbclid')->whereDate('created_at', $today)->count())
-                ->description('Facebook/Instagram reklam başarısı')
+            Stat::make('Menü 30 Günlük Trend', '')
+                ->chart($monthlyMenu)
+                ->color('warning')
+                ->extraAttributes(['class' => 'border-t']),
+
+            /* ============================================================
+             |  REKLAM TIKLAMALARI (FBCLID)
+             ============================================================ */
+            Stat::make('Reklam Tıklamaları (Bugün)', $todayAds)
+                ->description('Meta Ads → fbclid ile gelenler')
                 ->descriptionIcon('heroicon-m-megaphone')
                 ->color('info')
-                ->extraAttributes([
-                    'class' => 'cursor-pointer',
-                    'title' => 'Bu veri doğrudan reklamlardan gelen müşterileri gösterir',
-                ]),
+                ->chart($weeklyAds),
+            Stat::make('Reklam 7 Günlük Trend', '')
+                ->chart($weeklyAds)
+                ->color('info')
+                ->extraAttributes(['class' => 'border-t']),
+
+            Stat::make('Reklam 30 Günlük Trend', '')
+                ->chart($monthlyAds)
+                ->color('info')
+                ->extraAttributes(['class' => 'border-t']),
         ];
+    }
+
+    /* =====================================================================
+     |  HELPER: BELLİ BİR TİP İÇİN GÜNLÜK GRUPLANMIŞ GRAFİK VERİSİ ÜRET
+     ===================================================================== */
+    private function buildDailyChart(string $type, Carbon $startDate): array
+    {
+        $records = Lead::type($type)
+            ->where('created_at', '>=', $startDate)
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->orderBy('day')
+            ->pluck('total', 'day')
+            ->toArray();
+
+        return array_values($records);
+    }
+
+    private function buildDailyChartForAds(Carbon $startDate): array
+    {
+        $records = Lead::whereNotNull('fbclid')
+            ->where('created_at', '>=', $startDate)
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->orderBy('day')
+            ->pluck('total', 'day')
+            ->toArray();
+
+        return array_values($records);
     }
 }

@@ -3,138 +3,123 @@
 namespace App\Http\Controllers\Site\Lead;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Lead;
 use App\Services\MetaCapiService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class IndexController extends Controller
 {
-    /**
-     * WhatsApp Butonu
-     */
     public function whatsapp(Request $request)
     {
-        // type: whatsapp
         return $this->processLead(
-            buttonId: 'meta-whatsapp',
-            type: 'whatsapp',
-            targetUrl: 'https://wa.me/905352855696'
+            'whatsapp',
+            'meta-whatsapp',
+            'https://wa.me/905352855696',
+            $request
         );
     }
 
-    /**
-     * Menü Butonu
-     */
     public function menu(Request $request)
     {
-        // type: menu
         return $this->processLead(
-            buttonId: 'meta-menu',
-            type: 'menu',
-            targetUrl: route('site.menu.index')
+            'menu',
+            'meta-menu',
+            route('site.menu.index'),
+            $request
         );
     }
 
-    /**
-     * Ortak Lead Kayıt + CAPI Gönderimi
-     *
-     * @param  string $buttonId   Pixel’de kullanacağın buton ID (meta-whatsapp, meta-menu vs.)
-     * @param  string $type       Lead tablosundaki type alanı (whatsapp | menu vs.)
-     * @param  string $targetUrl  Tıklama sonrası yönlendirilecek URL
-     */
-    private function processLead(string $buttonId, string $type, string $targetUrl)
-    {
-        $request   = request();
-        $userAgent = $request->userAgent();
+    private function processLead(
+        string $type,
+        string $buttonId,
+        string $targetUrl,
+        Request $request
+    ) {
+        $ua = $request->userAgent();
 
-        // 0) Trafik verilerini (utm, fbclid, fbp) Session'a bir kere yaz
-        MetaCapiService::captureTrafficDataOnce();
-
-        // 1) BOT / SERVER-SIDE (Guzzle, curl, bot vs.) filtreleme
+        // BOT filtresi
         if (
-            ! $userAgent ||
-            str_contains($userAgent, 'GuzzleHttp') ||
-            str_contains($userAgent, 'curl') ||
-            str_contains(strtolower($userAgent), 'bot') ||
-            str_contains(strtolower($userAgent), 'spider') ||
-            str_contains(strtolower($userAgent), 'crawler')
+            empty($ua) ||
+            str_contains($ua, 'GuzzleHttp') ||
+            str_contains($ua, 'curl') ||
+            str_contains(strtolower($ua), 'bot') ||
+            str_contains(strtolower($ua), 'crawler') ||
+            str_contains(strtolower($ua), 'spider')
         ) {
             return redirect()->to($targetUrl);
         }
 
-        // 2) IP, device, session bilgileri
-        $ip          = $request->ip();
-        $sessionHash = MetaCapiService::getSessionHash();
-        $rawDeviceId = MetaCapiService::getOrCreateDeviceId();
-        $deviceId    = hash('sha256', $rawDeviceId);
-        $fbp         = MetaCapiService::getOrCreateFbp();
-        $fbc         = MetaCapiService::getFormattedFbc();
-        $browserId   = MetaCapiService::getOrCreateBrowserId();
+        // Trafik verilerini yakala
+        MetaCapiService::captureTrafficDataOnce($request);
 
-        // 3) Kaynak URL & UTM çözümleme
-        // Facebook reklamından gelindiğinde asıl parametreler şu anki request üzerinde.
-        $landingPage = $request->fullUrl();
-        $referer     = $request->headers->get('referer'); // çoğu zaman null (Facebook referrer policy)
-        $qs          = $request->query();                 // tüm query parametreler
+        // Advanced Matching kimlikleri
+        $externalId = MetaCapiService::getOrCreateExternalId($request);
+        $sessionId  = session()->getId();
+        $fbp        = MetaCapiService::getOrCreateFbp($request);
+        $fbc        = MetaCapiService::getFormattedFbc($request);
+        $deviceId   = MetaCapiService::getOrCreateDeviceId();
+        $browserId  = MetaCapiService::getOrCreateBrowserId();
+        $platform   = MetaCapiService::detectPlatform($ua);
+        $isMobile   = MetaCapiService::isMobileDevice($ua);
 
-        // 4) 24 saat içinde aynı cihaz + aynı type için tekrar lead oluşturma
-        // Test için kapatmak istersen: $exists = false;
-        $exists = Lead::where('type', $type)
-            ->where('device_id', $deviceId)
-            ->where('created_at', '>', now()->subHours(24))
-            ->exists();
+        // QueryString
+        $qs     = $request->query();
+        $fbclid = $qs['fbclid'] ?? session('fbclid');
+        $gclid  = $qs['gclid'] ?? null;
 
-        if ($exists) {
-            return redirect()->to($targetUrl);
-        }
+        // URL verileri
+        $eventSourceUrl = strtok($request->fullUrl(), '?');
+        $cameFrom       = url()->previous();
+        $referer        = $request->headers->get('referer');
 
         try {
+            // Event ID
             $eventId = MetaCapiService::generateEventId();
 
-            // 5) Lead kaydı
+            // DB KAYIT
             $lead = Lead::create([
                 'type'          => $type,
+                'button_id'     => $buttonId,
                 'event_id'      => $eventId,
                 'event_name'    => 'Lead',
 
-                'utm_source'    => $qs['utm_source']   ?? session('utm_source'),
-                'utm_campaign'  => $qs['utm_campaign'] ?? session('utm_campaign'),
-                'utm_medium'    => $qs['utm_medium']   ?? session('utm_medium'),
-                'fbclid'        => $qs['fbclid']       ?? session('meta_fbclid'),
-                'gclid'         => $qs['gclid']        ?? null,
+                'utm_source'    => session('utm_source'),
+                'utm_medium'    => session('utm_medium'),
+                'utm_campaign'  => session('utm_campaign'),
+                'fbclid'        => $fbclid,
+                'gclid'         => $gclid,
 
+                'external_id'   => $externalId,
+                'session_id'    => $sessionId,
                 'device_id'     => $deviceId,
-                'session_hash'  => $sessionHash,
+                'browser_id'    => $browserId,
                 'fbp'           => $fbp,
                 'fbc'           => $fbc,
-                'browser_id'    => $browserId,
 
-                'ip_address'    => $ip,
-                'user_agent'    => $userAgent,
+                'ip_address'    => $request->ip(),
+                'user_agent'    => $ua,
                 'referer'       => $referer,
-                'landing_page'  => $landingPage,
+                'event_source_url' => $eventSourceUrl,
+                'came_from_url'    => $cameFrom,
+
+                'platform'      => $platform,
+                'is_mobile'     => $isMobile,
 
                 'payload'       => [
-                    'button'        => $buttonId,
-                    'raw_device_id' => $rawDeviceId,
+                    'full_query' => $qs,
                 ],
             ]);
 
-            // 6) Meta CAPI Event (Advanced Matching ile)
+            // META CAPI EVENT
             MetaCapiService::sendEvent('Lead', [
-                'lead_id'   => $lead->id,
                 'type'      => $type,
-                'device_id' => $deviceId,
-                'fbp'       => $fbp,
-                'fbc'       => $fbc,
-                'country'   => 'tr',
+                'lead_id'   => $lead->id,
+                'button_id' => $buttonId,
             ], $eventId);
 
         } catch (\Throwable $e) {
-            Log::error('Lead Hatası: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error('Lead Error', ['error' => $e->getMessage()]);
         }
 
         return redirect()->to($targetUrl);
