@@ -2,200 +2,116 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\LeadResource\Pages;
 use App\Models\Lead;
-use Filament\Forms\Form;
+use Filament\Resources\Resource;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Resources\Resource;
-use Filament\Support\Enums\FontWeight;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
+use App\Filament\Resources\LeadResource\Pages;
 
 class LeadResource extends Resource
 {
     protected static ?string $model = Lead::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $navigationLabel = 'Dönüşüm Takibi';
-    protected static ?string $modelLabel = 'Dönüşüm Kaydı';
     protected static ?string $pluralModelLabel = 'Dönüşümler (CAPI)';
-
-    public static function form(Form $form): Form
-    {
-        return $form->schema([]);
-    }
 
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist->schema([
-
-            /* ============================================================
-             |  DÖNÜŞÜM ÖZETİ
-             ============================================================ */
+            
+            // 1. ÖZET VE DURUM
             Section::make('Dönüşüm Özeti')
                 ->schema([
                     Grid::make(4)->schema([
-
-                        TextEntry::make('type')
-                            ->label('Dönüşüm Tipi')
-                            ->badge()
-                            ->icon(fn($state) => $state === 'whatsapp'
-                                ? 'heroicon-m-chat-bubble-left-right'
-                                : 'heroicon-m-list-bullet')
-                            ->color(fn($state) => $state === 'whatsapp' ? 'success' : 'warning')
-                            ->formatStateUsing(fn($state) => $state === 'whatsapp' ? 'WhatsApp' : 'Menü'),
-
-                        TextEntry::make('utm_source')
-                            ->label('Kaynak')
-                            ->badge()
-                            ->color('info')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                        TextEntry::make('utm_campaign')
-                            ->label('Kampanya')
-                            ->placeholder('-')
-                            ->weight(FontWeight::SemiBold)
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                        TextEntry::make('created_at')
-                            ->label('Tarih')
-                            ->dateTime('d M Y H:i:s'),
+                        TextEntry::make('type')->label('Eylem Tipi')->badge()->color('success'),
+                        TextEntry::make('event_name')->label('Meta Event'),
+                        TextEntry::make('button_id')->label('Buton ID')->placeholder('-'),
+                        TextEntry::make('created_at')->label('Kayıt Tarihi')->dateTime('d M Y H:i:s'),
                     ]),
                 ]),
 
-            /* ============================================================
-             |  TRAFİK PARAMETRELERİ
-             ============================================================ */
-            Section::make('Trafik Parametreleri')
+            // 2. PAZARLAMA VE TRAFİK (UTM & REKLAM)
+            Section::make('Pazarlama ve Reklam Parametreleri')
+                ->description('UTM kaynakları ve reklam tıklama kimlikleri')
                 ->collapsible()
-                ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
-
-                        TextEntry::make('utm_source')
-                            ->label('utm_source')
-                            ->badge()
-                            ->color('info')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                        TextEntry::make('utm_medium')
-                            ->label('utm_medium')
-                            ->badge()
-                            ->color('info')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                        TextEntry::make('utm_campaign')
-                            ->label('utm_campaign')
-                            ->badge()
-                            ->color('info')
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                        TextEntry::make('fbclid')
-                            ->copyable()
-                            ->color(fn($state) => $state ? 'success' : 'gray'),
-
-                        TextEntry::make('gclid')
-                            ->copyable()
-                            ->color(fn($state) => $state ? 'warning' : 'gray'),
+                        TextEntry::make('utm_source')->label('UTM Source')->badge()->color('info'),
+                        TextEntry::make('utm_medium')->label('UTM Medium')->badge(),
+                        TextEntry::make('utm_campaign')->label('UTM Campaign')->badge(),
+                        TextEntry::make('utm_term')->label('UTM Term'),
+                        TextEntry::make('utm_content')->label('UTM Content'),
+                    ]),
+                    Grid::make(2)->schema([
+                        TextEntry::make('fbclid')->label('Facebook Click ID (fbclid)')->copyable()->fontFamily('mono')->color('primary'),
+                        TextEntry::make('gclid')->label('Google Click ID (gclid)')->copyable()->fontFamily('mono')->color('warning'),
                     ]),
                 ]),
 
-            /* ============================================================
-             |  META CAPI PARAMETRELERİ
-             ============================================================ */
-            Section::make('Meta CAPI Parametreleri')
+            // 3. META CAPI KİMLİKLERİ
+            Section::make('Meta Tarayıcı ve Eşleşme Verileri')
                 ->collapsible()
-                ->collapsed()
                 ->schema([
                     Grid::make(2)->schema([
-
-                        TextEntry::make('event_id')
-                            ->copyable()
-                            ->fontFamily('mono'),
-
-                        TextEntry::make('fbc')
-                            ->copyable()
-                            ->fontFamily('mono'),
-
-                        TextEntry::make('fbp')
-                            ->copyable()
-                            ->fontFamily('mono'),
-
-                        TextEntry::make('browser_id')
-                            ->copyable()
-                            ->fontFamily('mono'),
-
-                        TextEntry::make('device_id')
-                            ->copyable()
-                            ->fontFamily('mono')
-                            ->columnSpanFull(),
-
-                        TextEntry::make('session_hash')
-                            ->copyable()
-                            ->fontFamily('mono')
-                            ->columnSpanFull(),
+                        TextEntry::make('event_id')->label('Event ID')->copyable()->fontFamily('mono'),
+                        TextEntry::make('external_id')->label('External ID')->copyable()->fontFamily('mono'),
+                        TextEntry::make('fbp')->label('_fbp')->copyable()->fontFamily('mono'),
+                        TextEntry::make('fbc')->label('_fbc')->copyable()->fontFamily('mono'),
                     ]),
                 ]),
 
-            /* ============================================================
-             |  CİHAZ VE TEKNİK VERİLER
-             ============================================================ */
-            Section::make('Cihaz ve Teknik Veriler')
+            // 4. TEKNİK VE CİHAZ BİLGİLERİ
+            Section::make('Cihaz ve Bağlantı Bilgileri')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
                     Grid::make(3)->schema([
-
-                        TextEntry::make('ip_address')
-                            ->label('IP Adresi'),
-
-                        TextEntry::make('platform')
-                            ->badge()
-                            ->color('primary'),
-
-                        TextEntry::make('is_mobile')
-                            ->badge()
-                            ->color(fn($state) => $state ? 'success' : 'gray')
-                            ->formatStateUsing(fn($state) => $state ? 'Mobil' : 'Desktop'),
-
-                        TextEntry::make('referer')
-                            ->columnSpanFull()
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                        TextEntry::make('landing_page')
-                            ->columnSpanFull()
-                            ->url(fn($state) => is_string($state) ? $state : null)
-                            ->openUrlInNewTab()
-                            ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
+                        TextEntry::make('ip_address')->label('IP Adresi'),
+                        TextEntry::make('platform')->label('İşletim Sistemi')->badge(),
+                        TextEntry::make('is_mobile')->label('Mobil Cihaz mı?')
+                            ->formatStateUsing(fn($state) => $state ? 'Evet' : 'Hayır')
+                            ->badge()->color(fn($state) => $state ? 'success' : 'gray'),
                     ]),
+                    TextEntry::make('user_agent')->label('User Agent')->size('xs')->color('gray'),
                 ]),
 
-            /* ============================================================
-             |  PAYLOAD JSON — FİLAMENT 3.3 UYUMLU
-             ============================================================ */
-            Section::make('Payload')
+            // 5. URL GEÇMİŞİ
+            Section::make('Navigasyon Geçmişi')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
-                    TextEntry::make('payload')
-                        ->label('Payload JSON')
-                        ->formatStateUsing(fn($state) => json_encode($state, JSON_PRETTY_PRINT))
-                        ->copyable()
-                        ->columnSpanFull()
-                        ->extraAttributes([
-                            'style' =>
-                                'white-space: pre-wrap;
-                                 font-family: monospace;
-                                 font-size: 14px;
-                                 background:#0f0f0f;
-                                 color:#eee;
-                                 padding:16px;
-                                 border-radius:8px;'
-                        ]),
+                    TextEntry::make('landing_page')->label('Giriş Sayfası (Landing)')->copyable(),
+                    TextEntry::make('came_from_url')->label('Geldiği URL'),
+                    TextEntry::make('referer')->label('Referer (Yönlendiren)'),
+                    TextEntry::make('event_source_url')->label('Event Kaynak URL (CAPI)'),
+                ]),
+
+            // 6. JSON LOGLARI (Hata Almamak İçin Accessor Kullanan Bölüm)
+            Section::make('Meta CAPI Logları (Ham Veri)')
+                ->description('Meta API tarafına giden ve dönen tüm ham JSON paketleri')
+                ->collapsible()
+                ->collapsed()
+                ->schema([
+                    TextEntry::make('payload_json')
+                        ->label('Payload (Cihaz & Tarayıcı Detayı)')
+                        ->extraAttributes(['class' => 'font-mono text-xs bg-gray-950 p-4 rounded-lg text-green-400'])
+                        ->columnSpanFull(),
+
+                    TextEntry::make('request_json')
+                        ->label('Meta Request (Gönderilen Paket)')
+                        ->extraAttributes(['class' => 'font-mono text-xs bg-black p-4 rounded-lg text-blue-400'])
+                        ->columnSpanFull(),
+
+                    TextEntry::make('response_json')
+                        ->label('Meta Response (Meta Yanıtı)')
+                        ->extraAttributes(['class' => 'font-mono text-xs bg-black p-4 rounded-lg text-purple-400'])
+                        ->columnSpanFull(),
                 ]),
         ]);
     }
@@ -204,30 +120,13 @@ class LeadResource extends Resource
     {
         return $table
             ->columns([
-
-                TextColumn::make('created_at')
-                    ->label('Zaman')
-                    ->dateTime('H:i | d.m.Y')
-                    ->sortable(),
-
-                TextColumn::make('type')
-                    ->label('Eylem')
-                    ->badge()
-                    ->formatStateUsing(fn($state) => $state === 'whatsapp' ? 'WhatsApp' : 'Menü')
-                    ->color(fn($state) => $state === 'whatsapp' ? 'success' : 'warning'),
-
-                TextColumn::make('utm_source')
-                    ->label('Kaynak')
-                    ->badge()
-                    ->color('info')
-                    ->searchable()
-                    ->formatStateUsing(fn($state) => is_array($state) ? json_encode($state) : $state),
-
-                TextColumn::make('fbclid')
-                    ->label('Reklam')
-                    ->formatStateUsing(fn($state) => $state ? 'Meta Ads' : 'Organik')
-                    ->badge()
-                    ->color(fn($state) => $state ? 'success' : 'gray'),
+                TextColumn::make('created_at')->label('Zaman')->dateTime('H:i | d.m.Y')->sortable(),
+                TextColumn::make('type')->label('Eylem')->badge()->color('success'),
+                TextColumn::make('utm_source')->label('Kaynak')->placeholder('Organik'),
+                TextColumn::make('fbclid')->label('Meta Ads')
+                    ->formatStateUsing(fn($state) => $state ? 'Reklam' : 'Değil')
+                    ->badge()->color(fn($state) => $state ? 'primary' : 'gray'),
+                TextColumn::make('ip_address')->label('IP')->searchable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
