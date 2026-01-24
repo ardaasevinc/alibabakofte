@@ -43,15 +43,18 @@ class LeadResource extends Resource
                         TextEntry::make('type')
                             ->label('Dönüşüm Tipi')
                             ->badge()
-                            ->icon(fn($state) =>
+                            ->icon(
+                                fn($state) =>
                                 $state === 'whatsapp'
-                                    ? 'heroicon-m-chat-bubble-left-right'
-                                    : 'heroicon-m-list-bullet'
+                                ? 'heroicon-m-chat-bubble-left-right'
+                                : 'heroicon-m-list-bullet'
                             )
-                            ->color(fn($state) =>
+                            ->color(
+                                fn($state) =>
                                 $state === 'whatsapp' ? 'success' : 'warning'
                             )
-                            ->formatStateUsing(fn($state) =>
+                            ->formatStateUsing(
+                                fn($state) =>
                                 $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
                             ),
 
@@ -175,7 +178,8 @@ class LeadResource extends Resource
                             ->label('Cihaz Türü')
                             ->badge()
                             ->color(fn($state) => $state ? 'success' : 'gray')
-                            ->formatStateUsing(fn($state) =>
+                            ->formatStateUsing(
+                                fn($state) =>
                                 $state ? 'Mobil' : 'Desktop'
                             ),
 
@@ -195,20 +199,24 @@ class LeadResource extends Resource
             /* ============================================================
              |  PAYLOAD JSON
              ============================================================ */
-            Section::make('Payload JSON')
+            /* ============================================================
+ |  PAYLOAD
+ ============================================================ */
+            Section::make('Payload')
                 ->collapsible()
                 ->collapsed()
                 ->schema([
                     TextEntry::make('payload')
-                        ->label('Payload')
-                        ->formatStateUsing(fn($state) =>
+                        ->label('Payload JSON')
+                        ->formatStateUsing(
+                            fn($state) =>
                             blank($state)
-                                ? 'Ek veri yok'
-                                : json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                            ? 'Ek veri yok'
+                            : json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
                         )
                         ->copyable()
                         ->extraAttributes([
-                            'class' => 'whitespace-pre-wrap text-xs font-mono bg-gray-100 dark:bg-gray-900 p-3 rounded-lg',
+                            'class' => 'whitespace-pre-wrap text-xs font-mono',
                         ])
                         ->columnSpanFull(),
                 ]),
@@ -231,10 +239,12 @@ class LeadResource extends Resource
                 TextColumn::make('type')
                     ->label('Eylem')
                     ->badge()
-                    ->formatStateUsing(fn($state) =>
+                    ->formatStateUsing(
+                        fn($state) =>
                         $state === 'whatsapp' ? 'WhatsApp' : 'Menü'
                     )
-                    ->color(fn($state) =>
+                    ->color(
+                        fn($state) =>
                         $state === 'whatsapp' ? 'success' : 'warning'
                     ),
 
@@ -246,11 +256,13 @@ class LeadResource extends Resource
 
                 TextColumn::make('fbclid')
                     ->label('Reklam')
-                    ->formatStateUsing(fn($state) =>
+                    ->formatStateUsing(
+                        fn($state) =>
                         $state ? 'Meta Ads' : 'Organik'
                     )
                     ->badge()
-                    ->color(fn($state) =>
+                    ->color(
+                        fn($state) =>
                         $state ? 'success' : 'gray'
                     ),
 
@@ -274,7 +286,7 @@ class LeadResource extends Resource
     {
         return [
             'index' => Pages\ListLeads::route('/'),
-            'view'  => Pages\ViewLead::route('/{record}'),
+            'view' => Pages\ViewLead::route('/{record}'),
         ];
     }
 }
