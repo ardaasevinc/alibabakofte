@@ -7,136 +7,74 @@ use App\Models\Lead;
 use App\Services\MetaCapiService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Http\RedirectResponse;
 
 class IndexController extends Controller
 {
-    /**
-     * WhatsApp butonu
-     */
-    public function whatsapp(Request $request)
+    public function whatsapp(Request $request): RedirectResponse
     {
-        return $this->processLead(
-            type: 'whatsapp',
-            buttonId: 'meta-whatsapp',
-            targetUrl: 'https://wa.me/905352855696',
-            request: $request
-        );
+        return $this->processLead($request, 'whatsapp', 'meta-whatsapp', 'https://wa.me/905352855696');
     }
 
-    /**
-     * Menü butonu
-     */
-    public function menu(Request $request)
+    public function menu(Request $request): RedirectResponse
     {
-        return $this->processLead(
-            type: 'menu',
-            buttonId: 'meta-menu',
-            targetUrl: route('site.menu.index'),
-            request: $request
-        );
+        return $this->processLead($request, 'menu', 'meta-menu', route('site.menu.index'));
     }
 
-    /**
-     * Ortak Lead kaydı + CAPI event
-     */
-    private function processLead(
-        string $type,
-        string $buttonId,
-        string $targetUrl,
-        Request $request
-    ) {
-        $ua = $request->userAgent();
+    private function processLead(Request $request, string $type, string $buttonId, string $targetUrl): RedirectResponse
+    {
+        $ua = $request->userAgent() ?? '';
 
-        // BOT filtresi
-        if (
-            empty($ua) ||
-            str_contains($ua, 'GuzzleHttp') ||
-            str_contains($ua, 'curl') ||
-            str_contains(strtolower($ua), 'bot') ||
-            str_contains(strtolower($ua), 'crawler') ||
-            str_contains(strtolower($ua), 'spider')
-        ) {
+        // Bot Filtresi
+        if (empty($ua) || preg_match('/bot|crawl|slurp|spider|guzzle|curl/i', $ua)) {
             return redirect()->to($targetUrl);
         }
 
-        // Trafik verilerini (utm, fbclid, fbp) 1 kez yakala
+        // Veri Yakalama
         MetaCapiService::captureTrafficDataOnce($request);
-
-        // Advanced Matching kimlikleri
-        $externalId = MetaCapiService::getOrCreateExternalId($request);
-        $sessionId  = session()->getId();
-        $fbp        = MetaCapiService::getOrCreateFbp($request);
-        $fbc        = MetaCapiService::getFormattedFbc($request);
-        $deviceId   = MetaCapiService::getOrCreateDeviceId();
-        $browserId  = MetaCapiService::getOrCreateBrowserId();
-        $platform   = MetaCapiService::detectPlatform($ua);
-        $isMobile   = MetaCapiService::isMobileDevice($ua);
-
-        // Query string verileri
-        $qs     = $request->query();
-        $fbclid = $qs['fbclid'] ?? session('fbclid');
-        $gclid  = $qs['gclid'] ?? null;
-
-        // URL verileri
-        $eventSourceUrl = strtok($request->fullUrl(), '?');
-        $cameFrom       = url()->previous();
-        $referer        = $request->headers->get('referer');
+        $eventId = MetaCapiService::generateEventId();
 
         try {
-            // Event ID
-            $eventId = MetaCapiService::generateEventId();
-
-            // DB kaydı
+            // Veritabanı Kaydı (Tüm detaylarla)
             $lead = Lead::create([
                 'type' => $type,
                 'button_id' => $buttonId,
                 'event_id' => $eventId,
                 'event_name' => 'Lead',
-
                 'utm_source' => session('utm_source'),
                 'utm_medium' => session('utm_medium'),
                 'utm_campaign' => session('utm_campaign'),
                 'utm_term' => session('utm_term'),
                 'utm_content' => session('utm_content'),
-                'fbclid' => $fbclid,
-                'gclid' => $gclid,
-
-                'external_id' => $externalId,
-                'session_id' => $sessionId,
-                'device_id' => $deviceId,
-                'browser_id' => $browserId,
-                'fbp' => $fbp,
-                'fbc' => $fbc,
-
+                'fbclid' => $request->query('fbclid') ?? session('fbclid'),
+                'external_id' => MetaCapiService::getOrCreateExternalId($request),
+                'session_id' => session()->getId(),
+                'device_id' => MetaCapiService::getOrCreateDeviceId(),
+                'browser_id' => MetaCapiService::getOrCreateBrowserId(),
+                'fbp' => MetaCapiService::getOrCreateFbp($request),
+                'fbc' => MetaCapiService::getFormattedFbc($request),
                 'ip_address' => $request->ip(),
                 'user_agent' => $ua,
-                'referer' => $referer,
-                'event_source_url' => $eventSourceUrl,
-                'came_from_url'    => $cameFrom,
-
-                'platform' => $platform,
-                'is_mobile' => $isMobile,
-
-                'payload' => [
-                    'full_query' => $qs,
-                ],
+                'referer' => $request->headers->get('referer'),
+                'event_source_url' => strtok($request->fullUrl(), '?'),
+                'came_from_url' => url()->previous(),
+                'platform' => MetaCapiService::detectPlatform($ua),
+                'is_mobile' => MetaCapiService::isMobileDevice($ua),
+                'payload' => ['full_query' => $request->query()],
             ]);
 
-            // META CAPI EVENT
+            // CAPI Gönderimi
             MetaCapiService::sendEvent(
                 eventName: 'Lead',
                 customData: [
                     'type' => $type,
-                    'lead_id' => $lead->id,
+                    'lead_id' => (string) $lead->id,
                     'button_id' => $buttonId,
                 ],
                 eventId: $eventId
             );
         } catch (\Throwable $e) {
-            Log::error('Lead Error', [
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
+            Log::error('Lead Error: ' . $e->getMessage());
         }
 
         return redirect()->to($targetUrl);
