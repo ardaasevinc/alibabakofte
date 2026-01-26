@@ -8,7 +8,8 @@ use App\Models\Lead;
 use App\Services\MetaCapiService;
 use Illuminate\Support\Facades\Cookie;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth; // IDE hatasını çözen Facade
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache; // Hız limiti için eklendi
 use Illuminate\Http\RedirectResponse;
 
 class IndexController extends Controller
@@ -35,14 +36,38 @@ class IndexController extends Controller
      */
     private function processLead(string $buttonId, string $targetUrl): RedirectResponse
     {
+        $userAgent = request()->userAgent();
+        $ip = request()->ip();
+
         /* ============================================================
-         * 1) Deduplication (Tekilleştirme) ID Üretimi
+         * 1) Bot Filtreleme (Boş kayıtların ana sebebi)
+         * ============================================================ */
+        $bots = [
+            'bot', 'crawler', 'spider', 'slurp', 'facebookexternalhit', 
+            'meta-external-hit', 'googlebot', 'bingbot', 'yandexbot', 'applebot'
+        ];
+        
+        if (str($userAgent)->lower()->contains($bots)) {
+            return redirect()->to($targetUrl); // Botu kaydetme, sadece yönlendir.
+        }
+
+        /* ============================================================
+         * 2) Hız Limiti (Spam engelleme - 10 saniyede 1 kayıt)
+         * ============================================================ */
+        $cacheKey = 'lead_limit_' . md5($ip . $buttonId);
+        if (Cache::has($cacheKey)) {
+            return redirect()->to($targetUrl); // Çok hızlı tıklıyorsa kaydetme, yönlendir.
+        }
+        Cache::put($cacheKey, true, 10); // 10 saniye kilit koy
+
+        /* ============================================================
+         * 3) Deduplication (Tekilleştirme) ID Üretimi
          * ============================================================ */
         $eventId = request()->query('meta_event_id') ?? ('lead_' . bin2hex(random_bytes(6)) . '_' . time());
         Cookie::queue('meta_event_id', $eventId, 10);
 
         /* ============================================================
-         * 2) URL ve Parametre Analizi
+         * 4) URL ve Parametre Analizi
          * ============================================================ */
         $previousUrl = url()->previous();
         $cleanUrl = strtok($previousUrl, '?'); 
@@ -53,7 +78,7 @@ class IndexController extends Controller
         $fbclid = $urlQueries['fbclid'] ?? request()->query('fbclid') ?? session('fbclid');
 
         /* ============================================================
-         * 3) fbc ve fbp Tanımlayıcıları
+         * 5) fbc ve fbp Tanımlayıcıları
          * ============================================================ */
         $fbc = null;
         if ($fbclid) {
@@ -68,28 +93,23 @@ class IndexController extends Controller
         }
 
         /* ============================================================
-         * 4) Gelişmiş Eşleştirme (Advanced Matching) Verileri
+         * 6) Gelişmiş Eşleştirme (Advanced Matching) Verileri
          * ============================================================ */
         $externalId = hash('sha256', (string)session()->getId());
         
         $userData = [
-            'client_ip_address' => request()->ip(),
-            'client_user_agent' => request()->userAgent(),
+            'client_ip_address' => $ip,
+            'client_user_agent' => $userAgent,
             'external_id'       => $externalId,
             'fbc'               => $fbc,
             'fbp'               => $fbp,
         ];
 
-        // IDE Hatanızın Çözümü: Auth Facade ve Null-safe operator kullanımı
         if (Auth::check()) {
             $user = Auth::user();
-            
             if ($user?->email) {
-                // Laravel 12 modern string manipülasyonu
-                $hashedEmail = hash('sha256', str($user->email)->trim()->lower()->toString());
-                $userData['em'] = [$hashedEmail];
+                $userData['em'] = [hash('sha256', str($user->email)->trim()->lower()->toString())];
             }
-
             if ($user?->phone) {
                 $cleanPhone = preg_replace('/[^0-9]/', '', $user->phone);
                 $userData['ph'] = [hash('sha256', (string)$cleanPhone)];
@@ -97,7 +117,7 @@ class IndexController extends Controller
         }
 
         /* ============================================================
-         * 5) Lead Kaydı ve CAPI Gönderimi
+         * 7) Lead Kaydı ve CAPI Gönderimi
          * ============================================================ */
         $lead = Lead::create([
             'type'         => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu',
@@ -109,8 +129,8 @@ class IndexController extends Controller
             'fbc'          => $fbc,
             'fbp'          => $fbp,
             'came_from_url'=> $cleanUrl,
-            'ip_address'   => request()->ip(),
-            'user_agent'   => request()->userAgent(),
+            'ip_address'   => $ip,
+            'user_agent'   => $userAgent,
             'platform'     => $this->detectPlatform(),
             'is_mobile'    => $this->isMobile(),
             'payload'      => [
@@ -127,8 +147,8 @@ class IndexController extends Controller
                 'action_source'    => 'website',
                 'user_data'        => $userData,
                 'custom_data'      => [
-                    'value'            => 1.00, // Paneldeki "Geçerli Değer" hatası çözüldü
-                    'currency'         => 'TRY', // Paneldeki "Para Birimi" hatası çözüldü
+                    'value'            => 1.00,
+                    'currency'         => 'TRY',
                     'content_name'     => $buttonId,
                     'content_category' => 'Lead Generation',
                     'lead_id'          => (string)$lead->id,
