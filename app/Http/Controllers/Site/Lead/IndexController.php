@@ -10,26 +10,35 @@ use Illuminate\Support\Facades\Log;
 
 class IndexController extends Controller
 {
+    /**
+     * WhatsApp butonu
+     */
     public function whatsapp(Request $request)
     {
         return $this->processLead(
-            'whatsapp',
-            'meta-whatsapp',
-            'https://wa.me/905352855696',
-            $request
+            type: 'whatsapp',
+            buttonId: 'meta-whatsapp',
+            targetUrl: 'https://wa.me/905352855696',
+            request: $request
         );
     }
 
+    /**
+     * Menü butonu
+     */
     public function menu(Request $request)
     {
         return $this->processLead(
-            'menu',
-            'meta-menu',
-            route('site.menu.index'),
-            $request
+            type: 'menu',
+            buttonId: 'meta-menu',
+            targetUrl: route('site.menu.index'),
+            request: $request
         );
     }
 
+    /**
+     * Ortak Lead kaydı + CAPI event
+     */
     private function processLead(
         string $type,
         string $buttonId,
@@ -50,7 +59,7 @@ class IndexController extends Controller
             return redirect()->to($targetUrl);
         }
 
-        // Trafik verilerini yakala
+        // Trafik verilerini (utm, fbclid, fbp) 1 kez yakala
         MetaCapiService::captureTrafficDataOnce($request);
 
         // Advanced Matching kimlikleri
@@ -63,7 +72,7 @@ class IndexController extends Controller
         $platform   = MetaCapiService::detectPlatform($ua);
         $isMobile   = MetaCapiService::isMobileDevice($ua);
 
-        // QueryString
+        // Query string verileri
         $qs     = $request->query();
         $fbclid = $qs['fbclid'] ?? session('fbclid');
         $gclid  = $qs['gclid'] ?? null;
@@ -77,49 +86,57 @@ class IndexController extends Controller
             // Event ID
             $eventId = MetaCapiService::generateEventId();
 
-            // DB KAYIT
+            // DB kaydı
             $lead = Lead::create([
-                'type'          => $type,
-                'button_id'     => $buttonId,
-                'event_id'      => $eventId,
-                'event_name'    => 'Lead',
+                'type' => $type,
+                'button_id' => $buttonId,
+                'event_id' => $eventId,
+                'event_name' => 'Lead',
 
-                'utm_source'    => session('utm_source'),
-                'utm_medium'    => session('utm_medium'),
-                'utm_campaign'  => session('utm_campaign'),
-                'fbclid'        => $fbclid,
-                'gclid'         => $gclid,
+                'utm_source' => session('utm_source'),
+                'utm_medium' => session('utm_medium'),
+                'utm_campaign' => session('utm_campaign'),
+                'utm_term' => session('utm_term'),
+                'utm_content' => session('utm_content'),
+                'fbclid' => $fbclid,
+                'gclid' => $gclid,
 
-                'external_id'   => $externalId,
-                'session_id'    => $sessionId,
-                'device_id'     => $deviceId,
-                'browser_id'    => $browserId,
-                'fbp'           => $fbp,
-                'fbc'           => $fbc,
+                'external_id' => $externalId,
+                'session_id' => $sessionId,
+                'device_id' => $deviceId,
+                'browser_id' => $browserId,
+                'fbp' => $fbp,
+                'fbc' => $fbc,
 
-                'ip_address'    => $request->ip(),
-                'user_agent'    => $ua,
-                'referer'       => $referer,
+                'ip_address' => $request->ip(),
+                'user_agent' => $ua,
+                'referer' => $referer,
                 'event_source_url' => $eventSourceUrl,
                 'came_from_url'    => $cameFrom,
 
-                'platform'      => $platform,
-                'is_mobile'     => $isMobile,
+                'platform' => $platform,
+                'is_mobile' => $isMobile,
 
-                'payload'       => [
+                'payload' => [
                     'full_query' => $qs,
                 ],
             ]);
 
             // META CAPI EVENT
-            MetaCapiService::sendEvent('Lead', [
-                'type'      => $type,
-                'lead_id'   => $lead->id,
-                'button_id' => $buttonId,
-            ], $eventId);
-
+            MetaCapiService::sendEvent(
+                eventName: 'Lead',
+                customData: [
+                    'type' => $type,
+                    'lead_id' => $lead->id,
+                    'button_id' => $buttonId,
+                ],
+                eventId: $eventId
+            );
         } catch (\Throwable $e) {
-            Log::error('Lead Error', ['error' => $e->getMessage()]);
+            Log::error('Lead Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
         }
 
         return redirect()->to($targetUrl);
