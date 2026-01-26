@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Lead;
 use App\Services\MetaCapiService;
-use Illuminate\Support\Facades\{Cookie, Log, Auth, Cache}; 
+use Illuminate\Support\Facades\{Cookie, Log, Auth, Cache};
 use Illuminate\Http\RedirectResponse;
 
 class IndexController extends Controller
@@ -27,9 +27,7 @@ class IndexController extends Controller
         $userAgent = request()->userAgent() ?? '';
         $ip = request()->ip();
 
-        /* ============================================================
-         * 1) AGRESİF BOT FİLTRESİ
-         * ============================================================ */
+        // 1. ADIM: GELİŞMİŞ BOT LİSTESİ
         $bots = [
             'bot', 'crawler', 'spider', 'slurp', 'facebookexternalhit', 
             'meta-external-hit', 'googlebot', 'bingbot', 'yandexbot', 
@@ -40,24 +38,20 @@ class IndexController extends Controller
             return redirect()->to($targetUrl);
         }
 
-        /* ============================================================
-         * 2) IP TABANLI SPAM KİLİDİ (THROTTLING)
-         * ============================================================ */
-        // Saniye saniye gelen kayıtları durduran ana mekanizma burasıdır.
-        $cacheKey = 'lead_protection_' . md5($ip); 
+        // 2. ADIM: IP TABANLI KESİN KİLİT (30 SANİYE)
+        // Saniye saniye gelen kayıtları durduran asıl yer burasıdır.
+        $cacheKey = 'alibaba_lead_lock_' . md5($ip); 
         
         if (Cache::has($cacheKey)) {
-            // Eğer son 20 saniye içinde bu IP'den bir kayıt geldiyse, 
-            // veritabanına yazmadan direkt yönlendir.
+            // Eğer son 30 saniye içinde bu IP'den bir kayıt geldiyse, 
+            // veritabanına yazmadan ve CAPI göndermeden direkt yönlendir.
             return redirect()->to($targetUrl);
         }
         
-        // 20 saniyelik "susma" süresi koy
-        Cache::put($cacheKey, true, 20);
+        // 30 saniyelik kilit koy
+        Cache::put($cacheKey, true, 30);
 
-        /* ============================================================
-         * 3) URL VE PARAMETRE ANALİZİ
-         * ============================================================ */
+        // 3. ADIM: PARAMETRELER
         $previousUrl = url()->previous();
         $cleanUrl = strtok($previousUrl, '?'); 
         $parsed = parse_url($previousUrl);
@@ -72,9 +66,7 @@ class IndexController extends Controller
         if ($fbclid) Cookie::queue('_fbc', $fbc, 43200);
         if (!request()->hasCookie('_fbp')) Cookie::queue('_fbp', $fbp, 43200);
 
-        /* ============================================================
-         * 4) VERİTABANI KAYDI
-         * ============================================================ */
+        // 4. ADIM: KAYIT
         $lead = Lead::create([
             'type'         => ($buttonId === 'meta-whatsapp') ? 'whatsapp' : 'menu',
             'event_id'     => $eventId,
@@ -92,9 +84,7 @@ class IndexController extends Controller
             'payload'      => ['button_id' => $buttonId],
         ]);
 
-        /* ============================================================
-         * 5) META CAPI GÖNDERİMİ
-         * ============================================================ */
+        // 5. ADIM: CAPI
         try {
             MetaCapiService::sendEvent('Lead', [
                 'event_id'         => $eventId,
@@ -113,7 +103,7 @@ class IndexController extends Controller
                 ]
             ], $eventId);
         } catch (\Exception $e) {
-            Log::error("Alibaba Meta CAPI Hatası: " . $e->getMessage());
+            Log::error("Alibaba CAPI Hatası: " . $e->getMessage());
         }
 
         return redirect()->to($targetUrl);
