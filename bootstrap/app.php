@@ -10,14 +10,10 @@ return Application::configure(basePath: dirname(__DIR__))
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware): void {
-
-       // Landing Katmanı
-    $middleware->append(\App\Http\Middleware\CaptureLandingMiddleware::class);
-
-    // PageView Katmanı (Lead ve Landing'den sonra çalışır)
-    $middleware->append(\App\Http\Middleware\PageViewMiddleware::class);
+    
+    ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(\App\Http\Middleware\CaptureMarketingData::class);
     })
-    ->withExceptions(function (Exceptions $exceptions): void {
+    ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
