@@ -55,20 +55,53 @@
 
     <link rel="apple-touch-icon" href="{{ asset('site/alibaba/icons/icon-192x192.png') }}">
 
-    <script>
-        !function (f, b, e, v, n, t, s) {
-            if (f.fbq) return; n = f.fbq = function () {
-                n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments)
-            };
-            if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
-            n.queue = []; t = b.createElement(e); t.async = !0;
-            t.src = v; s = b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t, s)
-        }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+   <script>
+    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)
+    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+</script>
 
-        fbq('init', '{{ $settings->facebook_pixel_code }}');
-        fbq('track', 'PageView');
-    </script>
+<script>
+    // Çerez yardımcı fonksiyonu
+    function getCookie(name) {
+        let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
+        return match ? match[2] : null;
+    }
+
+    // 1. Pixel'i Başlat (Advanced Matching)
+    // PHP tarafında session()->getId() ile ürettiğin external_id'yi JS'de de gönderiyoruz.
+    fbq('init', '{{ config("services.meta.pixel_id") }}', {
+        external_id: getCookie('external_id') || '{{ session()->getId() }}',
+        fbp: getCookie('_fbp'),
+        fbc: getCookie('_fbc')
+    });
+
+    // 2. Sayfa Görüntüleme
+    fbq('track', 'PageView');
+</script>
+
+<script>
+    function handleLead(type, targetUrl) {
+        const eventId = 'lead_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        
+        if (typeof fbq === 'function') {
+            fbq('track', 'Lead', {
+                content_name: type,
+                value: 1.00,
+                currency: 'TRY'
+            }, { eventID: eventId });
+        }
+
+        setTimeout(function() {
+            const separator = targetUrl.indexOf('?') !== -1 ? '&' : '?';
+            window.location.href = targetUrl + separator + 'meta_event_id=' + eventId;
+        }, 250);
+    }
+</script>
+
+
 
     
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
@@ -89,14 +122,7 @@
         @include('site.components.footer')
     </div>
 
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            if (!document.cookie.includes("browser_id=")) {
-                const bid = btoa(navigator.userAgent + screen.width + screen.height);
-                document.cookie = "browser_id=" + bid + "; path=/; max-age=" + (3600 * 24 * 365);
-            }
-        });
-    </script>
+   
 
     <script src="{{ asset('site/js/jquery.min.js') }}"></script>
     <script src="{{ asset('site/js/bootstrap.min.js') }}"></script>
