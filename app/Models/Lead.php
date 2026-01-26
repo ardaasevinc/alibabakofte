@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
 
 class Lead extends Model
 {
@@ -12,49 +11,118 @@ class Lead extends Model
 
     protected $table = 'leads';
 
+    /**
+     * Mass Assignment (DB kolonlarının tamamı)
+     */
     protected $fillable = [
-        'external_id', 'session_id', 'event_id', 'event_name', 'type', 'button_id',
-        'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
-        'fbclid', 'gclid', 'fbp', 'fbc', 'ip_address', 'user_agent', 'platform',
-        'is_mobile', 'came_from_url', 'event_source_url', 'landing_page', 'referer',
-        'payload', 'meta_request', 'meta_response',
+        'type',
+        'event_id',
+        'event_name',
+
+        'utm_source',
+        'utm_campaign',
+        'utm_medium',
+        'utm_term',
+        'utm_content',
+
+        'fbclid',
+        'fbc',
+        'fbp',
+
+        'came_from_url',
+
+        'ip_address',
+        'user_agent',
+
+        'platform',
+        'is_mobile',
+
+        'payload',
     ];
 
+    /**
+     * Cast'ler
+     */
     protected $casts = [
-        'payload'        => 'array',
-        'meta_request'   => 'array',
-        'meta_response'  => 'array',
-        'is_mobile'      => 'boolean',
+        'payload'   => 'array',
+        'is_mobile' => 'boolean',
     ];
 
+    /**
+     * Varsayılan değerler
+     */
     protected $attributes = [
         'event_name' => 'Lead',
     ];
 
-    /* ============================================================
-     * SCOPES
-     * ============================================================ */
-    public function scopeToday(Builder $query): void { $query->whereDate('created_at', today()); }
-    public function scopeAds(Builder $query): void { $query->whereNotNull('fbclid'); }
-
-    /* ============================================================
-     * ACCESSORS (Hatayı Çözen Kısım)
-     * ============================================================ */
-
-    public function getFormattedRequestAttribute(): ?string
+    /**
+     * Scope: UTM filtreleme
+     */
+    public function scopeUtm($query, $key, $value)
     {
-        if (empty($this->meta_request)) return null;
-        return json_encode($this->meta_request, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return $query->where("utm_{$key}", $value);
     }
 
-    public function getFormattedResponseAttribute(): ?string
+    /**
+     * Scope: Belirli buton tipleri
+     */
+    public function scopeType($query, $type)
     {
-        if (empty($this->meta_response)) return null;
-        return json_encode($this->meta_response, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return $query->where('type', $type);
     }
 
-    public function getUserAgentShortAttribute(): string
-{
-    return str($this->user_agent)->limit(50);
-}
+    /**
+     * Scope: Bugün gelen Lead'ler
+     */
+    public function scopeToday($query)
+    {
+        return $query->whereDate('created_at', today());
+    }
+
+    /**
+     * Scope: Reklam Lead'leri (utm_medium = reklam)
+     */
+    public function scopeAds($query)
+    {
+        return $query->where('utm_medium', 'reklam');
+    }
+
+    /**
+     * Kullanıcı mobil mi?
+     */
+    public function isMobileDevice(): bool
+    {
+        return (bool) $this->is_mobile;
+    }
+
+    /**
+     * Platform bilgisi: iOS / Android / Desktop
+     */
+    public function devicePlatform(): ?string
+    {
+        return $this->platform;
+    }
+
+    /**
+     * Lead kaynağı
+     */
+    public function source(): ?string
+    {
+        return $this->utm_source ?? 'direct';
+    }
+
+    /**
+     * Lead’in geldiği tüm verileri tek satır özet olarak döndürür
+     */
+    public function summary(): string
+    {
+        return sprintf(
+            '[%s] %s | %s → %s | IP: %s',
+            strtoupper($this->type),
+            $this->source(),
+            $this->utm_campaign ?? '-',
+            $this->came_from_url ?? '-',
+            $this->ip_address
+        );
+    }
 }

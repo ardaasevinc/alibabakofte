@@ -2,136 +2,231 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\LeadResource\Pages;
 use App\Models\Lead;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Infolists\Infolist;
-use Filament\Infolists\Components\Grid;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\Grid;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
-use App\Filament\Resources\LeadResource\Pages;
+use Filament\Support\Enums\FontWeight;
 
 class LeadResource extends Resource
 {
     protected static ?string $model = Lead::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
-    protected static ?string $navigationLabel = 'Dönüşüm Takibi';
-    protected static ?string $pluralModelLabel = 'Dönüşümler (CAPI)';
+    protected static ?string $navigationLabel = 'Dönüşüm Takibi (CAPI)';
+    protected static ?string $modelLabel = 'Dönüşüm';
+    protected static ?string $pluralModelLabel = 'Dönüşümler';
+
+    public static function form(Form $form): Form
+    {
+        return $form->schema([]); // Lead manuel oluşturulmaz
+    }
 
     public static function infolist(Infolist $infolist): Infolist
     {
-        return $infolist->schema([
-            
-            // 1. ÖZET VE DURUM
-            Section::make('Dönüşüm Özeti')
-                ->schema([
-                    Grid::make(4)->schema([
-                        TextEntry::make('type')->label('Eylem Tipi')->badge()->color('success'),
-                        TextEntry::make('event_name')->label('Meta Event'),
-                        TextEntry::make('button_id')->label('Buton ID')->placeholder('-'),
-                        TextEntry::make('created_at')->label('Kayıt Tarihi')->dateTime('d M Y H:i:s'),
+        return $infolist
+            ->schema([
+                Section::make('Dönüşüm Özeti')
+                    ->description('Meta CAPI, Pixel ve trafik verilerinin birleşik görünümü')
+                    ->schema([
+                        Grid::make(4)
+                            ->schema([
+
+                                TextEntry::make('type')
+                                    ->label('Dönüşüm Tipi')
+                                    ->badge()
+                                    ->formatStateUsing(fn($state) => match ($state) {
+                                        'whatsapp' => 'WhatsApp',
+                                        'menu' => 'Menü',
+                                        default => ucfirst($state),
+                                    })
+                                    ->color(fn($state) => match ($state) {
+                                        'whatsapp' => 'success',
+                                        'menu' => 'warning',
+                                        default => 'gray',
+                                    }),
+
+                                TextEntry::make('utm_source')
+                                    ->label('Kaynak')
+                                    ->badge()
+                                    ->placeholder('Direct')
+                                    ->color('info'),
+
+                                TextEntry::make('utm_campaign')
+                                    ->label('Kampanya')
+                                    ->placeholder('-')
+                                    ->weight(FontWeight::Bold),
+
+                                TextEntry::make('created_at')
+                                    ->label('Tarih/Saat')
+                                    ->dateTime('d.m.Y H:i:s'),
+                            ]),
                     ]),
-                ]),
 
-            // 2. PAZARLAMA VE TRAFİK (UTM & REKLAM)
-            Section::make('Pazarlama ve Reklam Parametreleri')
-                ->description('UTM kaynakları ve reklam tıklama kimlikleri')
-                ->collapsible()
-                ->schema([
-                    Grid::make(3)->schema([
-                        TextEntry::make('utm_source')->label('UTM Source')->badge()->color('info'),
-                        TextEntry::make('utm_medium')->label('UTM Medium')->badge(),
-                        TextEntry::make('utm_campaign')->label('UTM Campaign')->badge(),
-                        TextEntry::make('utm_term')->label('UTM Term'),
-                        TextEntry::make('utm_content')->label('UTM Content'),
-                    ]),
-                    Grid::make(2)->schema([
-                        TextEntry::make('fbclid')->label('Facebook Click ID (fbclid)')->copyable()->fontFamily('mono')->color('primary'),
-                        TextEntry::make('gclid')->label('Google Click ID (gclid)')->copyable()->fontFamily('mono')->color('warning'),
-                    ]),
-                ]),
+                Section::make('UTM Verileri')
+                    ->schema([
+                        Grid::make(4)
+                            ->schema([
+                                TextEntry::make('utm_medium')->label('Medium'),
+                                TextEntry::make('utm_term')->label('Keyword (utm_term)'),
+                                TextEntry::make('utm_content')->label('Content (utm_content)'),
+                                TextEntry::make('came_from_url')
+                                    ->label('Geldiği URL')
+                                    ->columnSpan(2)
+                                    ->url(fn($state) => $state)
+                                    ->openUrlInNewTab()
+                                    ->color('primary')
+                            ]),
+                    ])
+                    ->collapsed(),
 
-            // 3. META CAPI KİMLİKLERİ
-            Section::make('Meta Tarayıcı ve Eşleşme Verileri')
-                ->collapsible()
-                ->schema([
-                    Grid::make(2)->schema([
-                        TextEntry::make('event_id')->label('Event ID')->copyable()->fontFamily('mono'),
-                        TextEntry::make('external_id')->label('External ID')->copyable()->fontFamily('mono'),
-                        TextEntry::make('fbp')->label('_fbp')->copyable()->fontFamily('mono'),
-                        TextEntry::make('fbc')->label('_fbc')->copyable()->fontFamily('mono'),
-                    ]),
-                ]),
+                Section::make('Meta İzleme Parametreleri (CAPI + Pixel)')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextEntry::make('event_id')
+                                    ->label('Event ID (Dedup)')
+                                    ->fontFamily('mono')
+                                    ->copyable(),
 
-            // 4. TEKNİK VE CİHAZ BİLGİLERİ
-            Section::make('Cihaz ve Bağlantı Bilgileri')
-                ->collapsible()
-                ->collapsed()
-                ->schema([
-                    Grid::make(3)->schema([
-                        TextEntry::make('ip_address')->label('IP Adresi'),
-                        TextEntry::make('platform')->label('İşletim Sistemi')->badge(),
-                        TextEntry::make('is_mobile')->label('Mobil Cihaz mı?')
-                            ->formatStateUsing(fn($state) => $state ? 'Evet' : 'Hayır')
-                            ->badge()->color(fn($state) => $state ? 'success' : 'gray'),
-                    ]),
-                    TextEntry::make('user_agent')->label('User Agent')->size('xs')->color('gray'),
-                ]),
+                                TextEntry::make('fbp')
+                                    ->label('FBP (Browser ID)')
+                                    ->fontFamily('mono')
+                                    ->color(fn($state) => $state ? 'success' : 'gray')
+                                    ->copyable(),
 
-            // 5. URL GEÇMİŞİ
-            Section::make('Navigasyon Geçmişi')
-                ->collapsible()
-                ->collapsed()
-                ->schema([
-                    TextEntry::make('landing_page')->label('Giriş Sayfası (Landing)')->copyable(),
-                    TextEntry::make('came_from_url')->label('Geldiği URL'),
-                    TextEntry::make('referer')->label('Referer (Yönlendiren)'),
-                    TextEntry::make('event_source_url')->label('Event Kaynak URL (CAPI)'),
-                ]),
+                                TextEntry::make('fbc')
+                                    ->label('FBC (Click ID)')
+                                    ->fontFamily('mono')
+                                    ->color(fn($state) => $state ? 'warning' : 'gray')
+                                    ->copyable(),
 
-            // 6. JSON LOGLARI (Hata Almamak İçin Accessor Kullanan Bölüm)
-            Section::make('Meta CAPI Logları (Ham Veri)')
-                ->description('Meta API tarafına giden ve dönen tüm ham JSON paketleri')
-                ->collapsible()
-                ->collapsed()
-                ->schema([
-                    TextEntry::make('payload_json')
-                        ->label('Payload (Cihaz & Tarayıcı Detayı)')
-                        ->extraAttributes(['class' => 'font-mono text-xs bg-gray-950 p-4 rounded-lg text-green-400'])
-                        ->columnSpanFull(),
+                                TextEntry::make('fbclid')
+                                    ->label('fbclid')
+                                    ->fontFamily('mono')
+                                    ->placeholder('-')
+                                    ->copyable(),
+                            ]),
+                    ])
+                    ->collapsed(),
 
-                    TextEntry::make('request_json')
-                        ->label('Meta Request (Gönderilen Paket)')
-                        ->extraAttributes(['class' => 'font-mono text-xs bg-black p-4 rounded-lg text-blue-400'])
-                        ->columnSpanFull(),
+                Section::make('Cihaz ve Tarayıcı Verileri')
+                    ->schema([
+                        Grid::make(3)
+                            ->schema([
+                                TextEntry::make('platform')->label('Platform'),
+                                TextEntry::make('is_mobile')
+                                    ->label('Mobil mi?')
+                                    ->formatStateUsing(fn($state) => $state ? 'Evet' : 'Hayır')
+                                    ->badge()
+                                    ->color(fn($state) => $state ? 'success' : 'gray'),
 
-                    TextEntry::make('response_json')
-                        ->label('Meta Response (Meta Yanıtı)')
-                        ->extraAttributes(['class' => 'font-mono text-xs bg-black p-4 rounded-lg text-purple-400'])
-                        ->columnSpanFull(),
-                ]),
-        ]);
+                                TextEntry::make('ip_address')
+                                    ->label('IP Adresi')
+                                    ->icon('heroicon-m-globe-alt'),
+
+                                TextEntry::make('user_agent')
+                                    ->label('User Agent')
+                                    ->columnSpanFull()
+                                    ->color('gray'),
+                            ]),
+                    ])
+                    ->collapsed(),
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                TextColumn::make('created_at')->label('Zaman')->dateTime('H:i | d.m.Y')->sortable(),
-                TextColumn::make('type')->label('Eylem')->badge()->color('success'),
-                TextColumn::make('utm_source')->label('Kaynak')->placeholder('Organik'),
-                TextColumn::make('fbclid')->label('Meta Ads')
-                    ->formatStateUsing(fn($state) => $state ? 'Reklam' : 'Değil')
-                    ->badge()->color(fn($state) => $state ? 'primary' : 'gray'),
-                TextColumn::make('ip_address')->label('IP')->searchable(),
+
+                TextColumn::make('created_at')
+                    ->label('Zaman')
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->description(fn($record) => $record->created_at->diffForHumans()),
+
+                TextColumn::make('type')
+                    ->label('Tip')
+                    ->badge()
+                    ->formatStateUsing(fn($state) => match ($state) {
+                        'whatsapp' => 'WhatsApp',
+                        'menu' => 'Menü',
+                        default => ucfirst($state),
+                    })
+                    ->color(fn($state) => match ($state) {
+                        'whatsapp' => 'success',
+                        'menu' => 'warning',
+                        default => 'gray',
+                    }),
+
+                TextColumn::make('utm_source')
+                    ->label('Kaynak')
+                    ->badge()
+                    ->color('info')
+                    ->searchable(),
+
+                TextColumn::make('utm_campaign')
+                    ->label('Kampanya')
+                    ->placeholder('-')
+                    ->toggleable(),
+
+                TextColumn::make('fbclid')
+                    ->label('Reklam')
+                    ->formatStateUsing(fn($state) => $state ? 'Ads' : 'Organik')
+                    ->badge()
+                    ->color(fn($state) => $state ? 'success' : 'gray'),
+
+                TextColumn::make('came_from_url')
+                    ->label('Geldiği URL')
+                    ->url(fn($state) => $state)
+                    ->limit(20)
+                    ->openUrlInNewTab()
+                    ->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->filters([
+
+                Tables\Filters\SelectFilter::make('type')
+                    ->label('Dönüşüm Tipi')
+                    ->options([
+                        'whatsapp' => 'WhatsApp',
+                        'menu' => 'Menü',
+                    ]),
+
+                Tables\Filters\TernaryFilter::make('fbclid')
+                    ->label('Trafik Kaynağı')
+                    ->placeholder('Hepsi')
+                    ->trueLabel('Reklam')
+                    ->falseLabel('Organik')
+                    ->queries(
+                        true: fn($q) => $q->whereNotNull('fbclid'),
+                        false: fn($q) => $q->whereNull('fbclid'),
+                    ),
+
+                Tables\Filters\Filter::make('today')
+                    ->label('Bugün')
+                    ->query(fn($q) => $q->whereDate('created_at', today())),
+            ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-            ]);
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation(),
+                ]),
+            ])
+            ->emptyStateHeading('Henüz veri yok')
+            ->emptyStateDescription('Meta CAPI üzerinden ilk dönüşüm geldiğinde burada görünür.');
     }
 
     public static function getPages(): array
