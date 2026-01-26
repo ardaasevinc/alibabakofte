@@ -4,40 +4,55 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class MetaCapiService
 {
+    /**
+     * En yüksek kalite CAPI Event Gönderimi
+     */
     public static function sendEvent(string $eventName, array $data = [], ?string $eventId = null)
     {
         $pixelId     = config('services.meta.pixel_id');
         $accessToken = config('services.meta.access_token');
         $apiVersion  = 'v21.0';
 
-        if (!$pixelId || !$accessToken) {
-            Log::error('META_CAPI_CONFIG_MISSING', ['pixel_id' => $pixelId]);
-            return null;
-        }
+        /* ============================================================
+         * 1) Deduplication ID
+         * ============================================================ */
+        $eventId = $eventId ?? ($data['event_id'] ?? 'event_' . bin2hex(random_bytes(6)) . '_' . time());
 
-        $eventId = $eventId ?? ($data['event_id'] ?? 'ev_' . Str::random(10) . '_' . time());
+        /* ============================================================
+         * 2) USER DATA (Controller'dan gelen veriyi koru ve genişlet)
+         * ============================================================ */
+        // Controller'dan gelen user_data varsa onu al, yoksa boş dizi oluştur
         $userData = $data['user_data'] ?? [];
 
-        $userData['client_ip_address'] = $userData['client_ip_address'] ?? request()->ip();
-        $userData['client_user_agent'] = $userData['client_user_agent'] ?? request()->userAgent();
+        // Eksik temel verileri tamamla
         $userData['fbp'] = $userData['fbp'] ?? request()->cookie('_fbp');
         $userData['fbc'] = $userData['fbc'] ?? (request()->cookie('_fbc') ?? self::generateFbcFromUrl());
-
+        $userData['client_ip_address'] = $userData['client_ip_address'] ?? request()->ip();
+        $userData['client_user_agent'] = $userData['client_user_agent'] ?? request()->userAgent();
+        
         if (!isset($userData['external_id'])) {
             $userData['external_id'] = hash('sha256', (string)session()->getId());
         }
 
-        $userData = array_filter($userData, fn($value) => !is_null($value) && $value !== '');
+        // null değerleri temizle
+        $userData = array_filter($userData);
+
+        /* ============================================================
+         * 3) CUSTOM DATA (Para birimi ve Değer hatasını çözer)
+         * ============================================================ */
+        $customData = $data['custom_data'] ?? [];
 
         $customData = array_merge([
-            'value' => 1.00,
+            'value' => 1.00, // Sayısal (float) gönderim kritik
             'currency' => 'TRY',
-        ], $data['custom_data'] ?? []);
+        ], $customData);
 
+        /* ============================================================
+         * 4) PAYLOAD — Meta Official Format
+         * ============================================================ */
         $payload = [
             'data' => [
                 [
@@ -46,32 +61,28 @@ class MetaCapiService
                     'event_id' => $eventId,
                     'action_source' => 'website',
                     'event_source_url' => $data['event_source_url'] ?? strtok(request()->fullUrl(), '?'),
+
                     'user_data' => $userData,
                     'custom_data' => $customData,
-                ]
+                ],
             ],
+            'test_event_code' => config('services.meta.test_code') ?? null,
         ];
 
-        if ($testCode = config('services.meta.test_code')) {
-            $payload['test_event_code'] = $testCode;
-        }
-
-        $endpoint = "https://graph.facebook.com/{$apiVersion}/{$pixelId}/events";
+        /* ============================================================
+         * 5) SEND REQUEST
+         * ============================================================ */
+        $endpoint = "https://graph.facebook.com/{$apiVersion}/{$pixelId}/events?access_token={$accessToken}";
 
         try {
-            $response = Http::timeout(5)
-                ->withToken($accessToken)
-                ->post($endpoint, $payload);
+            $response = Http::timeout(10)->withHeaders([
+                'Content-Type' => 'application/json',
+            ])->post($endpoint, $payload);
 
             if ($response->failed()) {
-                // IDE hatasını önlemek için collect() veya json() çıktısını değişkene alıyoruz
-                $errorOutput = $response->json();
-
                 Log::warning('META_CAPI_FAILED', [
                     'status' => $response->status(),
-                    // null-safe operator (?) kullanarak iç içe dizi hatasını engelliyoruz
-                    'error' => $errorOutput['error']['message'] ?? ($errorOutput['error'] ?? 'Unknown Meta Error'),
-                    'event' => $eventName
+                    'body' => $response->json()
                 ]);
             }
 
@@ -82,11 +93,15 @@ class MetaCapiService
         }
     }
 
+    /**
+     * fbclid üzerinden fbc oluşturur
+     */
     private static function generateFbcFromUrl(): ?string
     {
-        $fbclid = request()->query('fbclid') ?? session('fbclid');
+        $fbclid = request()->query('fbclid');
         if (!$fbclid)
             return null;
+
         return 'fb.1.' . time() . '.' . $fbclid;
     }
 }
