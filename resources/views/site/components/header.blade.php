@@ -33,7 +33,7 @@
                             </li>
                             <li>
                                 <a href="{{ Request::is('/') ? '#about' : url('/#about') }}"
-                                    class="inner-link">Hakkımızda</a>
+                                    class="inner-link ">Hakkımızda</a>
                                     
                             </li>
                             <li>

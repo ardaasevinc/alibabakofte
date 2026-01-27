@@ -55,7 +55,7 @@
 
     <link rel="apple-touch-icon" href="{{ asset('site/alibaba/icons/icon-192x192.png') }}">
 
-   <script>
+<script>
     !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
     n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
@@ -64,40 +64,46 @@
 </script>
 
 <script>
-    // Çerez yardımcı fonksiyonu
     function getCookie(name) {
         let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : null;
     }
 
-    // 1. Pixel'i Başlat (Advanced Matching)
-    // PHP tarafında session()->getId() ile ürettiğin external_id'yi JS'de de gönderiyoruz.
+   
     fbq('init', '{{ config("services.meta.pixel_id") }}', {
-        external_id: getCookie('external_id') || '{{ session()->getId() }}',
+        
+        external_id: '{{ hash("sha256", (string)session()->getId()) }}', 
         fbp: getCookie('_fbp'),
         fbc: getCookie('_fbc')
     });
 
-    // 2. Sayfa Görüntüleme
     fbq('track', 'PageView');
 </script>
 
 <script>
     function handleLead(type, targetUrl) {
-        const eventId = 'lead_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        // 1. PHP Controller ile birebir aynı yapıda ID üretimi
+        const timestamp = Math.floor(Date.now() / 1000);
+        const randomStr = Math.random().toString(36).substr(2, 9);
+        const eventId = 'lead_' + randomStr + '_' + timestamp;
         
+        // 2. Tarayıcı Olayını Tetikle
         if (typeof fbq === 'function') {
             fbq('track', 'Lead', {
                 content_name: type,
                 value: 1.00,
-                currency: 'TRY'
-            }, { eventID: eventId });
+                currency: 'TRY',
+              
+                event_source_url: window.location.href.split('?')[0] 
+            }, { eventID: eventId }); 
         }
 
+      
         setTimeout(function() {
             const separator = targetUrl.indexOf('?') !== -1 ? '&' : '?';
+         
             window.location.href = targetUrl + separator + 'meta_event_id=' + eventId;
-        }, 250);
+        }, 500); 
     }
 </script>
 
