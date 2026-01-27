@@ -55,55 +55,65 @@
 
     <link rel="apple-touch-icon" href="{{ asset('site/alibaba/icons/icon-192x192.png') }}">
 
-<script>
-    !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-    n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
-    n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
-    t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)
-    }(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-</script>
+
 
 <script>
+    !function (f, b, e, v, n, t, s) {
+        if (f.fbq) return; n = f.fbq = function () {
+            n.callMethod ?
+            n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+        }; if (!f._fbq) f._fbq = n;
+        n.push = n; n.loaded = !0; n.version = '2.0'; n.queue = []; t = b.createElement(e); t.async = !0;
+        t.src = v; s = b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t, s)
+    }(window, document, 'script', 'https://connect.facebook.net/en_US/fbevents.js');
+
     function getCookie(name) {
         let match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
         return match ? match[2] : null;
     }
 
-   
+    // 1. GELİŞMİŞ EŞLEŞTİRME (Advanced Matching)
+    // Auth kullanıcısı varsa verilerini hashleyerek veriyoruz.
     fbq('init', '{{ config("services.meta.pixel_id") }}', {
-        
-        external_id: '{{ hash("sha256", (string)session()->getId()) }}', 
+        @if(auth()->check())
+            em: '{{ hash("sha256", strtolower(trim(auth()->user()->email))) }}',
+            @if(auth()->user()->phone)
+                ph: '{{ hash("sha256", preg_replace("/[^0-9]/", "", auth()->user()->phone)) }}',
+            @endif
+        @endif
+        external_id: '{{ hash("sha256", (string) session()->getId()) }}',
         fbp: getCookie('_fbp'),
         fbc: getCookie('_fbc')
     });
 
     fbq('track', 'PageView');
-</script>
 
-<script>
+    // 2. LEAD İŞLEME FONKSİYONU
     function handleLead(type, targetUrl) {
-        // 1. PHP Controller ile birebir aynı yapıda ID üretimi
+        // PHP tarafıyla birebir uyumlu saniye bazlı ID
         const timestamp = Math.floor(Date.now() / 1000);
-        const randomStr = Math.random().toString(36).substr(2, 9);
+        const randomStr = Math.random().toString(36).substr(2, 6);
         const eventId = 'lead_' + randomStr + '_' + timestamp;
-        
-        // 2. Tarayıcı Olayını Tetikle
+
+        // Fiyat Hatası Çözümü: Tarayıcı tarafında da ufak bir dinamizm ekliyoruz
+        // Controller'daki rand() mantığına yakın (1.00 - 1.50 arası)
+        const dynamicValue = (type === 'meta-whatsapp' ? 1.50 : 1.00) + (Math.floor(Math.random() * 50) / 100);
+
+        // Meta Pixel Olayı
         if (typeof fbq === 'function') {
             fbq('track', 'Lead', {
                 content_name: type,
-                value: 1.00,
-                currency: 'TRY',
-              
-                event_source_url: window.location.href.split('?')[0] 
-            }, { eventID: eventId }); 
+                value: dynamicValue,
+                currency: 'TRY'
+            }, { eventID: eventId }); // EVENT_ID Eşleşmesi Burada
         }
 
-      
-        setTimeout(function() {
+        // Meta'nın olayı algılaması için çok kısa bir bekleme (500ms ideal)
+        setTimeout(function () {
             const separator = targetUrl.indexOf('?') !== -1 ? '&' : '?';
-         
+            // ID'yi Controller'a taşıyoruz
             window.location.href = targetUrl + separator + 'meta_event_id=' + eventId;
-        }, 500); 
+        }, 400); 
     }
 </script>
 
