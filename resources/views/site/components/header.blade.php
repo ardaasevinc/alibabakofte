@@ -7,13 +7,13 @@
         <div class="pt120 pb80 pt-xs-40 pb-xs-16">
             <div class="container">
                 @if($settings?->logo_dark)
-                <div class="row">
-                    <div class="col-sm-12 text-center">
-                        <a href="{{ route('site.index') }}">
-                            <img alt="Logo" class="logo" src="{{ asset('uploads/' . $settings?->logo_dark) }}" />
-                        </a>
+                    <div class="row">
+                        <div class="col-sm-12 text-center">
+                            <a href="{{ route('site.index') }}">
+                                <img alt="Logo" class="logo" src="{{ asset('uploads/' . $settings?->logo_dark) }}" />
+                            </a>
+                        </div>
                     </div>
-                </div>
                 @endif
                 <!--end of row-->
             </div>
@@ -34,31 +34,34 @@
                             <li>
                                 <a href="{{ Request::is('/') ? '#about' : url('/#about') }}"
                                     class="inner-link ">Hakkımızda</a>
-                                    
+
                             </li>
                             <li>
-                                <a id="meta-menu" href="{{ route('lead.menu') }}" class="inner-link">Menü</a>
+                                <a id="meta-menu" href="javascript:void(0)"
+                                    onclick="handleLead('meta-menu', '{{ route('lead.menu') }}')" class="inner-link">
+                                    Menü
+                                </a>
                             </li>
                             <li>
                                 <a href="{{ Request::is('/') ? '#special' : url('/#special') }}"
                                     class="inner-link">Spesiyal</a>
                             </li>
                             @if(\App\Models\Gallery::count() > 0)
-                            <li>
-                                <a href="{{ Request::is('/') ? '#gallery' : url('/#gallery') }}"
-                                    class="inner-link">Galeri</a>
-                            </li>
+                                <li>
+                                    <a href="{{ Request::is('/') ? '#gallery' : url('/#gallery') }}"
+                                        class="inner-link">Galeri</a>
+                                </li>
                             @endif
                             <li>
                                 <a href="{{ Request::is('/') ? '#contact' : url('/#contact') }}" class="inner-link">Bize
                                     Ulaşın</a>
                             </li>
-                            
+
                             <li>
                                 <a href="{{ route('site.blog.index') }}">Blog</a>
                             </li>
 
-                            
+
                         </ul>
                     </div>
                 </div>
