@@ -113,19 +113,19 @@
             const separator = targetUrl.indexOf('?') !== -1 ? '&' : '?';
             // ID'yi Controller'a taşıyoruz
             window.location.href = targetUrl + separator + 'meta_event_id=' + eventId;
-        }, 400); 
+        }, 400);
     }
 </script>
 
 
 
-    
+
     <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
         gtag('js', new Date());
-        gtag('config', '{{ $settings->google_analytics_code }}');
+        gtag('config', '{{ $settings?->google_analytics_code }}');
     </script>
 </head>
 
@@ -135,10 +135,11 @@
     <div class="main-container">
         @yield('content')
         @include('site.components.whatsapp')
+
         @include('site.components.footer')
     </div>
 
-   
+
 
     <script src="{{ asset('site/js/jquery.min.js') }}"></script>
     <script src="{{ asset('site/js/bootstrap.min.js') }}"></script>
