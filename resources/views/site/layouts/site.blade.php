@@ -120,7 +120,7 @@
 
 
 
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings->google_analytics_code }}"></script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ $settings?->google_analytics_code }}"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
         function gtag() { dataLayer.push(arguments); }
