@@ -7,16 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     public function up(): void
-    {
-        Schema::table('instagram_posts', function (Blueprint $table) {
-            $table->text('thumbnail_url')->nullable()->change();
-        });
-    }
+{
+    Schema::table('instagram_posts', function (Blueprint $table) {
+        // change() yerine direkt tipi yazıyoruz çünkü sütun henüz yok
+        $table->text('thumbnail_url')->nullable()->after('media_url');
+    });
+}
 
-    public function down(): void
-    {
-        Schema::table('instagram_posts', function (Blueprint $table) {
-            $table->string('thumbnail_url', 255)->nullable()->change();
-        });
-    }
+public function down(): void
+{
+    Schema::table('instagram_posts', function (Blueprint $table) {
+        $table->dropColumn('thumbnail_url');
+    });
+}
 };
